@@ -1,0 +1,15 @@
+*** Install wondershaper
+
+sudo apt install wondershaper
+git clone https://github.com/magnific0/wondershaper.git
+cd wondershaper/
+sudo make install
+sudo systemctl enable wondershaper.service
+
+*** NOTE: enp0s3 is the name of the network interface. Replace it with the name of the network interface of your PC.
+*** You can find out by using 'ipconfig' command.
+*** The below command limits the downlink rate to 5000kbps, and uplink rate to 3000kbps.
+
+sudo wondershaper -c  -a enp0s3
+sudo wondershaper -a enp0s3 -d 5000 -u 3000
+
