@@ -1,0 +1,35 @@
+1. Install Prerequisies:
+
+sudo apt-get install gcc-6 g++-6 make binutils autoconf automake autotools-dev libtool pkg-config zlib1g-dev libcunit1-dev libssl-dev libxml2-dev libev-dev libevent-dev libjansson-dev libc-ares-dev libjemalloc-dev libsystemd-dev cython python3.8-dev python3-setuptools libboost-dev libboost-thread-dev libx11-dev
+
+2. Setup default gcc/g++/python
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.8 10
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 10
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 10
+
+
+3. Install nghttp2 library
+
+- Download and extract nghttp2 source code (nghttp2-1.43.0.tar.bz2) from:
+  https://github.com/nghttp2/nghttp2/releases/tag/v1.43.0
+
+- Compile and install:
+  $ cd nghttp2-1.43.0
+  $ ./configure --enable-asio-lib --enable-lib-only
+  $ make
+  $ sudo make install
+
+4. Compile server
+  $ cd server
+  $ bash build_server.sh
+
+5 Run server
+  Change the ip address at line 3 of file run_server.sh to your server's ip address
+  $ sudo tc qdisc add dev enp0s3 root netem delay 5ms
+  $ bash run_server.sh
+  
+
+
+
+
+
