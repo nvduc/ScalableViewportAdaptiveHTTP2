@@ -24,5 +24,3 @@ Follow instructions in `server/INSTALL_NOTE` to build the server.
   * `log_player_ALG_5.txt`: Player status per video segment
   * `log_player_ALG_5_frame`.txt: Player status per video frame
 
-## How to develope new algorithms?
-
