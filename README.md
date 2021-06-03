@@ -8,7 +8,7 @@
 
 ## Installation
 ### General
-- To build and run this code, you will need to prepare two PCs running Ubuntu-18.04 LTS, one for client and another for server. We recomend using Ubuntu running on VirtualBox.
+- To build and run this code, you will need to prepare two PCs running Ubuntu-18.04 LTS, one for client and another for server. We recommend using Ubuntu running on VirtualBox.
 - We originally use DummyNet to emulate client-server network. However, since DummyNet is not supported in Ubuntu-18.04, we use a new tool called `wondershaper` on client machine to limit network throughput, and using Ubuntu's built-in `netem` utility on the server machine to emulate network delay. 
 ### Client
 Follow instructions in `client/INSTALL_NOTE` to build the client. 
@@ -19,7 +19,7 @@ Follow instructions in `server/INSTALL_NOTE` to build the server.
 - The client will run the algorithm proposed in paper [1] by default (ALG=5). To run the algoirthm proposed in paper [2], set the value of `ALG` in file `client/metadata/metadata.cfg` to 11.  
 ## Understanding log files
 * The results of each run are recorded in 4 log files in `client/`:
-  * `log_iter_ALG_5.txt`: Download information per download iteration
+  * `log_iter_ALG_5.txt`: Download information per iteration
   * `log_stream_ALG_5.txt`: Download information per HTTP2's stream
   * `log_player_ALG_5.txt`: Player status per video segment
   * `log_player_ALG_5_frame`.txt: Player status per video frame
