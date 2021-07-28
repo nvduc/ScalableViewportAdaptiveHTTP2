@@ -1,0 +1,64 @@
+//#define MAX_SEG 1000
+//#define NO_FACE 6
+#include <map>
+#include <vector>
+using namespace std;
+class Metric{
+  public:
+    double** face_req_time;
+    double** face_rcv_time;
+    double** face_dow_time;
+    double** face_dow_thrp;
+    double** face_ini_weight;
+    double* sam_thrp;
+    double* est_thrp;
+    int** face_br;
+    int** face_stream_ID;
+    map<int, int> stream_id_2_sid;
+    map<int, int> stream_id_2_fid;
+    Metric(int NO_SEG, int NO_FACE){
+      this->face_stream_ID = this->init2dArrayInt(NO_SEG, NO_FACE);      
+      this->face_br = this->init2dArrayInt(NO_SEG, NO_FACE);
+      this->face_req_time = this->init2dArrayDouble(NO_SEG, NO_FACE);
+      this->face_rcv_time = this->init2dArrayDouble(NO_SEG, NO_FACE);
+      this->face_dow_time = this->init2dArrayDouble(NO_SEG, NO_FACE);
+      this->face_dow_thrp = this->init2dArrayDouble(NO_SEG, NO_FACE);
+      this->face_ini_weight = this->init2dArrayDouble(NO_SEG, NO_FACE);
+      this->sam_thrp = new double[NO_SEG];
+      this->est_thrp = new double[NO_SEG]; 
+    }
+    void print(int sid, int fid){
+      cout << sid << ", " << fid << ", "; 
+      cout << face_br[sid][fid] << ", " << face_ini_weight[sid][fid] << ", " << face_req_time[sid][fid] << ", " << face_rcv_time[sid][fid] << ", ";
+      cout << face_dow_thrp[sid][fid] << ", " << sam_thrp[sid] << ", " << est_thrp[sid]  << endl; 
+    }
+    int** init2dArrayInt(int M, int N){
+      int** ret;
+      int i,j;
+      ret = new int*[M];
+      for(i=0; i < M; i++){
+        ret[i] = new int[N];
+      }
+      return ret;
+    }
+    double*** init3dArrayDouble(int M, int N, int P){
+      double*** ret;
+      int i,j;
+      ret = new double**[M];
+      for(i=0; i < M; i++){
+        ret[i] = new double*[N];
+        for(j=0; j < N; j++)
+          ret[i][j] = new double[P];
+      }
+      return ret;
+    }
+    double** init2dArrayDouble(int M, int N){
+      double** ret;
+      int i,j;
+      ret = new double*[M];
+      for(i=0; i < M; i++){
+        ret[i] = new double[N];
+      }
+      return ret;
+    }
+};

@@ -1,0 +1,1413 @@
+Listening at the address: 172.16.165.130 at port 3002
+
+Push seg #1 bitrate 200 at time: 1000ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #1 bitrate 200 at time: 1000ms
+
+Push seg #2 bitrate 200 at time: 1000ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #2 bitrate 200 at time: 1000ms
+
+Push seg #3 bitrate 200 at time: 1000ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #3 bitrate 200 at time: 1112ms
+
+Push seg #4 bitrate 200 at time: 1112ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #4 bitrate 200 at time: 1245ms
+
+Push seg #5 bitrate 200 at time: 1245ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #5 bitrate 200 at time: 1245ms
+
+Push seg #6 bitrate 200 at time: 1245ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #6 bitrate 200 at time: 1333ms
+
+Push seg #7 bitrate 200 at time: 1333ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #7 bitrate 200 at time: 1428ms
+
+Push seg #8 bitrate 200 at time: 1428ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #8 bitrate 200 at time: 1532ms
+
+Push seg #9 bitrate 200 at time: 1532ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #9 bitrate 200 at time: 1532ms
+
+Push seg #10 bitrate 200 at time: 1532ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #10 bitrate 200 at time: 1628ms
+
+Push seg #11 bitrate 200 at time: 1628ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #11 bitrate 200 at time: 1728ms
+
+Push seg #12 bitrate 200 at time: 1728ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #12 bitrate 200 at time: 1835ms
+
+Push seg #13 bitrate 200 at time: 1835ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #13 bitrate 200 at time: 1835ms
+
+Push seg #14 bitrate 200 at time: 1835ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #14 bitrate 200 at time: 1928ms
+
+Push seg #15 bitrate 200 at time: 1928ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #15 bitrate 200 at time: 2028ms
+
+Push seg #16 bitrate 200 at time: 2028ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #16 bitrate 200 at time: 2132ms
+
+Push seg #17 bitrate 200 at time: 2132ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #17 bitrate 200 at time: 2132ms
+
+Push seg #18 bitrate 200 at time: 2132ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[CONT] segment #18
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #18 bitrate 2000 at time: 2228ms
+
+Push seg #19 bitrate 2000 at time: 2228ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #19 bitrate 2000 at time: 2864ms
+
+Push seg #20 bitrate 2000 at time: 2864ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #20 bitrate 2000 at time: 3556ms
+
+Push seg #21 bitrate 2000 at time: 3557ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #21 bitrate 2000 at time: 4209ms
+
+Push seg #22 bitrate 2000 at time: 4209ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #22 bitrate 2000 at time: 5384ms
+
+Push seg #23 bitrate 2000 at time: 5384ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #23 bitrate 2000 at time: 6013ms
+
+Push seg #24 bitrate 2000 at time: 6015ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #24 bitrate 2000 at time: 6692ms
+
+Push seg #25 bitrate 2000 at time: 6692ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[CONT] segment #25
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #25 bitrate 2500 at time: 7312ms
+
+Push seg #26 bitrate 2500 at time: 7313ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #26 bitrate 2500 at time: 8189ms
+
+Push seg #27 bitrate 2500 at time: 8189ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #27 bitrate 2500 at time: 8980ms
+
+Push seg #28 bitrate 2500 at time: 8980ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #28 bitrate 2500 at time: 9772ms
+
+Push seg #29 bitrate 2500 at time: 9772ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #29 bitrate 2500 at time: 10652ms
+
+Push seg #30 bitrate 2500 at time: 10653ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #30 bitrate 2500 at time: 11452ms
+
+Push seg #31 bitrate 2500 at time: 11452ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #31 bitrate 2500 at time: 12208ms
+
+Push seg #32 bitrate 2500 at time: 12208ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #32 bitrate 2500 at time: 13100ms
+
+Push seg #33 bitrate 2500 at time: 13101ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #33 bitrate 2500 at time: 13916ms
+
+Push seg #34 bitrate 2500 at time: 13917ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #34 bitrate 2500 at time: 14701ms
+
+Push seg #35 bitrate 2500 at time: 14701ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #35 bitrate 2500 at time: 15581ms
+
+Push seg #36 bitrate 2500 at time: 15581ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #36 bitrate 2500 at time: 16380ms
+
+Push seg #37 bitrate 2500 at time: 16381ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #37 bitrate 2500 at time: 17172ms
+
+Push seg #38 bitrate 2500 at time: 17173ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #38 bitrate 2500 at time: 18052ms
+
+Push seg #39 bitrate 2500 at time: 18053ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #39 bitrate 2500 at time: 18845ms
+
+Push seg #40 bitrate 2500 at time: 18845ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #40 bitrate 2500 at time: 19648ms
+
+Push seg #41 bitrate 2500 at time: 19648ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #41 bitrate 2500 at time: 20536ms
+
+Push seg #42 bitrate 2500 at time: 20536ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #42 bitrate 2500 at time: 21360ms
+
+Push seg #43 bitrate 2500 at time: 21361ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #43 bitrate 2500 at time: 22116ms
+
+Push seg #44 bitrate 2500 at time: 22117ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #44 bitrate 2500 at time: 23012ms
+
+Push seg #45 bitrate 2500 at time: 23012ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #45 bitrate 2500 at time: 23812ms
+
+Push seg #46 bitrate 2500 at time: 23812ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #46 bitrate 2500 at time: 24588ms
+
+Push seg #47 bitrate 2500 at time: 24588ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #47 bitrate 2500 at time: 25472ms
+
+Push seg #48 bitrate 2500 at time: 25472ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #48 bitrate 2500 at time: 26300ms
+
+Push seg #49 bitrate 2500 at time: 26300ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #49 bitrate 2500 at time: 27092ms
+
+Push seg #50 bitrate 2500 at time: 27093ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #50 bitrate 2500 at time: 27976ms
+
+Push seg #51 bitrate 2500 at time: 27977ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #51 true
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #51 bitrate 2500 at time: 28840ms
+
+Push seg #52 bitrate 2500 at time: 28841ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #52 false
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #52 bitrate 2500 at time: 30968ms
+
+Push seg #53 bitrate 2500 at time: 30968ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #53 bitrate 2500 at time: 32068ms
+
+Push seg #54 bitrate 2500 at time: 32068ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #54 bitrate 2500 at time: 33044ms
+
+Push seg #55 bitrate 2500 at time: 33045ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #55 bitrate 2500 at time: 33984ms
+
+Push seg #56 bitrate 2500 at time: 33984ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #56 bitrate 2500 at time: 35028ms
+
+Push seg #57 bitrate 2500 at time: 35029ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #57 bitrate 2500 at time: 35940ms
+
+Push seg #58 bitrate 2500 at time: 35940ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #58 bitrate 2500 at time: 36796ms
+
+Push seg #59 bitrate 2500 at time: 36797ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #59 bitrate 2500 at time: 37700ms
+
+Push seg #60 bitrate 2500 at time: 37700ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #60 bitrate 2500 at time: 38520ms
+
+Push seg #61 bitrate 2500 at time: 38520ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #61 bitrate 2500 at time: 39332ms
+
+Push seg #62 bitrate 2500 at time: 39332ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #62 bitrate 2500 at time: 40248ms
+
+Push seg #63 bitrate 2500 at time: 40248ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #63 bitrate 2500 at time: 41044ms
+
+Push seg #64 bitrate 2500 at time: 41044ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #64 true
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #64 bitrate 2500 at time: 41852ms
+
+Push seg #65 bitrate 2500 at time: 41852ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #65 false
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #65 bitrate 2500 at time: 43709ms
+
+Push seg #66 bitrate 2500 at time: 43709ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #66 bitrate 2500 at time: 44520ms
+
+Push seg #67 bitrate 2500 at time: 44522ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #67 bitrate 2500 at time: 45348ms
+
+Push seg #68 bitrate 2500 at time: 45348ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #68 bitrate 2500 at time: 46152ms
+
+Push seg #69 bitrate 2500 at time: 46152ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #69 bitrate 2500 at time: 47020ms
+
+Push seg #70 bitrate 2500 at time: 47021ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #70 true
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #70 bitrate 2500 at time: 47812ms
+
+Push seg #71 bitrate 2500 at time: 47812ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #71 false
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #71 bitrate 2500 at time: 49656ms
+
+Push seg #72 bitrate 2500 at time: 49658ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #72 bitrate 2500 at time: 50432ms
+
+Push seg #73 bitrate 2500 at time: 50432ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #73 bitrate 2500 at time: 51289ms
+
+Push seg #74 bitrate 2500 at time: 51289ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #74 bitrate 2500 at time: 52168ms
+
+Push seg #75 bitrate 2500 at time: 52168ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #75 bitrate 2500 at time: 52952ms
+
+Push seg #76 bitrate 2500 at time: 52952ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #76 true
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #76 bitrate 2500 at time: 53720ms
+
+Push seg #77 bitrate 2500 at time: 53720ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #77 false
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #77 bitrate 2500 at time: 55572ms
+
+Push seg #78 bitrate 2500 at time: 55572ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #78 bitrate 2500 at time: 56400ms
+
+Push seg #79 bitrate 2500 at time: 56400ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #79 bitrate 2500 at time: 57204ms
+
+Push seg #80 bitrate 2500 at time: 57204ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #80 bitrate 2500 at time: 58108ms
+
+Push seg #81 bitrate 2500 at time: 58108ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #81 true
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #81 bitrate 2500 at time: 58928ms
+
+Push seg #82 bitrate 2500 at time: 58929ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #82 false
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #82 bitrate 2500 at time: 60768ms
+
+Push seg #83 bitrate 2500 at time: 60768ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #83 bitrate 2500 at time: 61532ms
+
+Push seg #84 bitrate 2500 at time: 61533ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #84 bitrate 2500 at time: 62380ms
+
+Push seg #85 bitrate 2500 at time: 62380ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #85 bitrate 2500 at time: 63204ms
+
+Push seg #86 bitrate 2500 at time: 63204ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #86 bitrate 2500 at time: 64008ms
+
+Push seg #87 bitrate 2500 at time: 64008ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #87 true
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #87 bitrate 2500 at time: 64948ms
+
+Push seg #88 bitrate 2500 at time: 64949ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[STEADY] segment #88 false
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #88 bitrate 2500 at time: 66976ms
+
+Push seg #89 bitrate 2500 at time: 66976ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #89 bitrate 2500 at time: 68000ms
+
+Push seg #90 bitrate 2500 at time: 68000ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #90 bitrate 2500 at time: 69068ms
+
+Push seg #91 bitrate 2500 at time: 69068ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #91 bitrate 2500 at time: 70164ms
+
+Push seg #92 bitrate 2500 at time: 70165ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #92 bitrate 2500 at time: 71412ms
+
+Push seg #93 bitrate 2500 at time: 71412ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #93 bitrate 2500 at time: 72628ms
+
+Push seg #94 bitrate 2500 at time: 72629ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #94 bitrate 2500 at time: 73796ms
+
+Push seg #95 bitrate 2500 at time: 73796ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #95 bitrate 2500 at time: 74972ms
+
+Push seg #96 bitrate 2500 at time: 74972ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #96 bitrate 2500 at time: 76464ms
+
+Push seg #97 bitrate 2500 at time: 76464ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #97 bitrate 2500 at time: 77700ms
+
+Push seg #98 bitrate 2500 at time: 77700ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #98 bitrate 2500 at time: 79276ms
+
+Push seg #99 bitrate 2500 at time: 79276ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #99 bitrate 2500 at time: 80600ms
+
+Push seg #100 bitrate 2500 at time: 80600ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #100 bitrate 2500 at time: 81604ms
+
+Push seg #101 bitrate 2500 at time: 81605ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #101 bitrate 2500 at time: 82576ms
+
+Push seg #102 bitrate 2500 at time: 82576ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #102 bitrate 2500 at time: 83748ms
+
+Push seg #103 bitrate 2500 at time: 83748ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #103 bitrate 2500 at time: 84828ms
+
+Push seg #104 bitrate 2500 at time: 84828ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #104 bitrate 2500 at time: 85700ms
+
+Push seg #105 bitrate 2500 at time: 85700ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #105 bitrate 2500 at time: 86944ms
+
+Push seg #106 bitrate 2500 at time: 86945ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #106 bitrate 2500 at time: 88352ms
+
+Push seg #107 bitrate 2500 at time: 88352ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #107 bitrate 2500 at time: 90856ms
+
+Push seg #108 bitrate 2500 at time: 90856ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[CONT] segment #108
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #108 bitrate 2000 at time: 96308ms
+
+Push seg #109 bitrate 2000 at time: 96308ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #109 bitrate 2000 at time: 101736ms
+
+Push seg #110 bitrate 2000 at time: 101736ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[CONT] segment #110
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #110 bitrate 300 at time: 102852ms
+
+Push seg #111 bitrate 300 at time: 102852ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #111 bitrate 300 at time: 103200ms
+
+Push seg #112 bitrate 300 at time: 103201ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #112 bitrate 300 at time: 103380ms
+
+Push seg #113 bitrate 300 at time: 103380ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #113 bitrate 300 at time: 103552ms
+
+Push seg #114 bitrate 300 at time: 103552ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #114 bitrate 300 at time: 103804ms
+
+Push seg #115 bitrate 300 at time: 103804ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #115 bitrate 300 at time: 104048ms
+
+Push seg #116 bitrate 300 at time: 104048ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #116 bitrate 300 at time: 104304ms
+
+Push seg #117 bitrate 300 at time: 104305ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #117 bitrate 300 at time: 104552ms
+
+Push seg #118 bitrate 300 at time: 104553ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #118 bitrate 300 at time: 104760ms
+
+Push seg #119 bitrate 300 at time: 104760ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #119 bitrate 300 at time: 104956ms
+
+Push seg #120 bitrate 300 at time: 104956ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #120 bitrate 300 at time: 105360ms
+
+Push seg #121 bitrate 300 at time: 105361ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #121 bitrate 300 at time: 105568ms
+
+Push seg #122 bitrate 300 at time: 105569ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #122 bitrate 300 at time: 105792ms
+
+Push seg #123 bitrate 300 at time: 105792ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #123 bitrate 300 at time: 106028ms
+
+Push seg #124 bitrate 300 at time: 106028ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[CONT] segment #124
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #124 bitrate 400 at time: 106253ms
+
+Push seg #125 bitrate 400 at time: 106253ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #125 bitrate 400 at time: 106816ms
+
+Push seg #126 bitrate 400 at time: 106816ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[CONT] segment #126
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #126 bitrate 500 at time: 107229ms
+
+Push seg #127 bitrate 500 at time: 107229ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #127 bitrate 500 at time: 107876ms
+
+Push seg #128 bitrate 500 at time: 107877ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[CONT] segment #128
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #128 bitrate 600 at time: 108424ms
+
+Push seg #129 bitrate 600 at time: 108424ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #129 bitrate 600 at time: 109008ms
+
+Push seg #130 bitrate 600 at time: 109008ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[CONT] segment #130
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #130 bitrate 700 at time: 109604ms
+
+Push seg #131 bitrate 700 at time: 109605ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #131 bitrate 700 at time: 110280ms
+
+Push seg #132 bitrate 700 at time: 110280ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+[CONT] segment #132
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #132 bitrate 900 at time: 111148ms
+
+Push seg #133 bitrate 900 at time: 111148ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #133 bitrate 900 at time: 112096ms
+
+Push seg #134 bitrate 900 at time: 112096ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #134 bitrate 900 at time: 113056ms
+
+Push seg #135 bitrate 900 at time: 113056ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #135 bitrate 900 at time: 114412ms
+
+Push seg #136 bitrate 900 at time: 114412ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #136 bitrate 900 at time: 115220ms
+
+Push seg #137 bitrate 900 at time: 115220ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #137 bitrate 900 at time: 116168ms
+
+Push seg #138 bitrate 900 at time: 116168ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #138 bitrate 900 at time: 117536ms
+
+Push seg #139 bitrate 900 at time: 117536ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #139 bitrate 900 at time: 118376ms
+
+Push seg #140 bitrate 900 at time: 118376ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #140 bitrate 900 at time: 119216ms
+
+Push seg #141 bitrate 900 at time: 119216ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #141 bitrate 900 at time: 120260ms
+
+Push seg #142 bitrate 900 at time: 120260ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #142 bitrate 900 at time: 121028ms
+
+Push seg #143 bitrate 900 at time: 121028ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #143 bitrate 900 at time: 121792ms
+
+Push seg #144 bitrate 900 at time: 121792ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #144 bitrate 900 at time: 122728ms
+
+Push seg #145 bitrate 900 at time: 122728ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #145 bitrate 900 at time: 123496ms
+
+Push seg #146 bitrate 900 at time: 123496ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #146 bitrate 900 at time: 125664ms
+
+Push seg #147 bitrate 900 at time: 125664ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #147 bitrate 900 at time: 127288ms
+
+Push seg #148 bitrate 900 at time: 127288ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #148 bitrate 900 at time: 128364ms
+
+Push seg #149 bitrate 900 at time: 128364ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
+Sent seg #149 bitrate 900 at time: 130128ms
+
+Push seg #150 bitrate 900 at time: 130128ms
+======== Hung (1)
+======== Hung (2)
+======== Hung (3)
+======== Hung (3-2)
+======== Hung (4-0)
+======== Hung (4-2)
