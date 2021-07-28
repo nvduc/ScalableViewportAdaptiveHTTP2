@@ -1,0 +1,2567 @@
+vanduc:src$ ./nghttp -snv -w30 -rlog.har  -p30 http://127.0.0.1:3002/face0/bitrate=3000/num=1
+[  0.050] Connected
+send: reset nghttp2_active_outbound_item
+send: aob->item = (nil)
+stream: adjusting kept idle streams num_idle_streams=0, max=100
+stream: adjusting kept idle streams num_idle_streams=0, max=100
+send: end transmission of client magic
+send: reset nghttp2_active_outbound_item
+send: aob->item = (nil)
+send: next frame: payloadlen=18, type=4, flags=0x00, stream_id=0
+send: start transmitting frame type=4, length=27
+[  0.050] send SETTINGS frame <length=18, flags=0x00, stream_id=0>
+          (niv=3)
+          [SETTINGS_MAX_CONCURRENT_STREAMS(0x03):100]
+          [SETTINGS_INITIAL_WINDOW_SIZE(0x04):1073741823]
+          [SETTINGS_MAX_FRAME_SIZE(0x05):1048576]
+stream: adjusting kept idle streams num_idle_streams=0, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb020
+send: next frame: payloadlen=5, type=2, flags=0x00, stream_id=3
+send: start transmitting frame type=2, length=14
+[  0.050] send PRIORITY frame <length=5, flags=0x00, stream_id=3>
+          (dep_stream_id=0, weight=201, exclusive=0)
+stream: keep idle stream(0x7f34204242c0)=3, state=5
+stream: dep_add dep_stream(0x7f34204a5820)=0, stream(0x7f34204242c0)=3
+stream: adjusting kept idle streams num_idle_streams=1, max=100
+stream: adjusting kept idle streams num_idle_streams=1, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb0c0
+send: next frame: payloadlen=5, type=2, flags=0x00, stream_id=5
+send: start transmitting frame type=2, length=14
+[  0.050] send PRIORITY frame <length=5, flags=0x00, stream_id=5>
+          (dep_stream_id=0, weight=101, exclusive=0)
+stream: keep idle stream(0x7f34204243a0)=5, state=5
+stream: dep_add dep_stream(0x7f34204a5820)=0, stream(0x7f34204243a0)=5
+stream: adjusting kept idle streams num_idle_streams=2, max=100
+stream: adjusting kept idle streams num_idle_streams=2, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb160
+send: next frame: payloadlen=5, type=2, flags=0x00, stream_id=7
+send: start transmitting frame type=2, length=14
+[  0.050] send PRIORITY frame <length=5, flags=0x00, stream_id=7>
+          (dep_stream_id=0, weight=1, exclusive=0)
+stream: keep idle stream(0x7f3420424480)=7, state=5
+stream: dep_add dep_stream(0x7f34204a5820)=0, stream(0x7f3420424480)=7
+stream: adjusting kept idle streams num_idle_streams=3, max=100
+stream: adjusting kept idle streams num_idle_streams=3, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb200
+send: next frame: payloadlen=5, type=2, flags=0x00, stream_id=9
+send: start transmitting frame type=2, length=14
+[  0.050] send PRIORITY frame <length=5, flags=0x00, stream_id=9>
+          (dep_stream_id=7, weight=1, exclusive=0)
+stream: keep idle stream(0x7f3420424560)=9, state=5
+stream: dep_add dep_stream(0x7f3420424480)=7, stream(0x7f3420424560)=9
+stream: adjusting kept idle streams num_idle_streams=4, max=100
+stream: adjusting kept idle streams num_idle_streams=4, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb2a0
+send: next frame: payloadlen=5, type=2, flags=0x00, stream_id=11
+send: start transmitting frame type=2, length=14
+[  0.050] send PRIORITY frame <length=5, flags=0x00, stream_id=11>
+          (dep_stream_id=3, weight=1, exclusive=0)
+stream: keep idle stream(0x7f3420424640)=11, state=5
+stream: dep_add dep_stream(0x7f34204242c0)=3, stream(0x7f3420424640)=11
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: dep_add dep_stream(0x7f3420424640)=11, stream(0x7f3420424720)=13
+deflatehd: deflating :method: GET
+deflatehd: name/value match index=1
+deflatehd: emit indexed index=1, 1 bytes
+deflatehd: deflating :path: /face0/bitrate=3000/num=1
+deflatehd: name match index=3
+deflatehd: emit indname index=3, valuelen=25, indexing_mode=1
+deflatehd: emit string str=/face0/bitrate=3000/num=1, length=25, huffman=1, encoded_length=18
+deflatehd: deflating :scheme: http
+deflatehd: name/value match index=5
+deflatehd: emit indexed index=5, 1 bytes
+deflatehd: deflating :authority: 127.0.0.1:3002
+deflatehd: name match index=0
+deflatehd: emit indname index=0, valuelen=14, indexing_mode=0
+deflatehd: emit string str=127.0.0.1:3002, length=14, huffman=1, encoded_length=10
+deflatehd: deflating accept: */*
+deflatehd: name match index=18
+deflatehd: emit indname index=18, valuelen=3, indexing_mode=0
+deflatehd: emit string str=*/*, length=3, huffman=0, encoded_length=3
+deflatehd: deflating accept-encoding: gzip, deflate
+deflatehd: name/value match index=15
+deflatehd: emit indexed index=15, 1 bytes
+deflatehd: deflating user-agent: nghttp2/1.18.1
+deflatehd: name match index=57
+deflatehd: emit indname index=57, valuelen=14, indexing_mode=0
+deflatehd: emit string str=nghttp2/1.18.1, length=14, huffman=1, encoded_length=10
+deflatehd: all input name/value pairs were deflated
+send: HEADERS/PUSH_PROMISE, payloadlen=57
+send: before padding, HEADERS serialized in 66 bytes
+send: padding selected: payloadlen=57, padlen=0
+send: padlen = 0, nothing to do
+send: HEADERS finally serialized in 66 bytes
+send: next frame: payloadlen=57, type=1, flags=0x25, stream_id=13
+send: start transmitting frame type=1, length=66
+[  0.050] send HEADERS frame <length=57, flags=0x25, stream_id=13>
+          ; END_STREAM | END_HEADERS | PRIORITY
+          (padlen=0, dep_stream_id=11, weight=30, exclusive=0)
+          ; Open new stream
+          :method: GET
+          :path: /face0/bitrate=3000/num=1
+          :scheme: http
+          :authority: 127.0.0.1:3002
+          accept: */*
+          accept-encoding: gzip, deflate
+          user-agent: nghttp2/1.18.1
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb480
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_FIRST_SETTINGS]
+recv: [IB_READ_HEAD]
+recv: payloadlen=6, type=4, flags=0x00, stream_id=0
+recv: SETTINGS
+recv: [IB_READ_SETTINGS]
+recv: readlen=6, payloadleft=0
+[  0.101] recv SETTINGS frame <length=6, flags=0x00, stream_id=0>
+          (niv=1)
+          [SETTINGS_MAX_CONCURRENT_STREAMS(0x03):100]
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=4, flags=0x01, stream_id=0
+recv: SETTINGS
+recv: [IB_READ_SETTINGS]
+recv: readlen=0, payloadleft=0
+[  0.101] recv SETTINGS frame <length=0, flags=0x01, stream_id=0>
+          ; ACK
+          (niv=0)
+recv: [IB_READ_HEAD]
+recv: payloadlen=36, type=5, flags=0x04, stream_id=13
+recv: PUSH_PROMISE
+recv: no padding in payload
+recv: [IB_READ_NBYTE]
+recv: readlen=4, payloadleft=32, left=0
+stream: dep_add dep_stream(0x7f3420424720)=13, stream(0x7f3420424800)=2
+recv: call on_begin_headers callback stream_id=13
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=32, payloadleft=0
+recv: block final=1
+recv: decoding header block 32 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 2
+inflatehd: index=2
+inflatehd: header emission: :method: GET
+recv: proclen=1
+[  0.101] recv (stream_id=13) :method: GET
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 6
+inflatehd: index=6
+inflatehd: header emission: :scheme: http
+recv: proclen=1
+[  0.101] recv (stream_id=13) :scheme: http
+inflatehd: start state=2
+inflatehd: literal header repr - indexed name
+inflatehd: indexing required=1, no_index=0
+inflatehd: decoded integer is 1
+inflatehd: index=1
+inflatehd: huffman encoded=1
+inflatehd: decoded integer is 10
+inflatehd: valuelen=10
+inflatehd: 10 bytes read
+inflatehd: header emission: :authority: 127.0.0.1:3002
+recv: proclen=12
+[  0.101] recv (stream_id=13) :authority: 127.0.0.1:3002
+inflatehd: start state=2
+inflatehd: literal header repr - indexed name
+inflatehd: indexing required=0, no_index=0
+inflatehd: decoded integer is 4
+inflatehd: index=4
+inflatehd: huffman encoded=1
+inflatehd: decoded integer is 16
+inflatehd: valuelen=16
+inflatehd: 16 bytes read
+inflatehd: header emission: :path: /seg_1_rate_3000_face_0
+recv: proclen=18
+[  0.101] recv (stream_id=13) :path: /seg_1_rate_3000_face_0
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  0.101] recv PUSH_PROMISE frame <length=36, flags=0x04, stream_id=13>
+          ; END_HEADERS
+          (padlen=0, promised_stream_id=2)
+recv: [IB_READ_HEAD]
+recv: payloadlen=25, type=1, flags=0x04, stream_id=2
+recv: HEADERS
+recv: no padding in payload
+recv: call on_begin_headers callback stream_id=2
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=25, payloadleft=0
+recv: block final=1
+recv: decoding header block 25 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 8
+inflatehd: index=8
+inflatehd: header emission: :status: 200
+recv: proclen=1
+[  0.101] recv (stream_id=2) :status: 200
+inflatehd: start state=2
+inflatehd: literal header repr - indexed name
+inflatehd: indexing required=1, no_index=0
+inflatehd: decoded integer is 33
+inflatehd: index=33
+inflatehd: huffman encoded=1
+inflatehd: decoded integer is 22
+inflatehd: valuelen=22
+inflatehd: 22 bytes read
+inflatehd: header emission: date: Sun, 28 Oct 2018 02:46:33 GMT
+recv: proclen=24
+[  0.101] recv (stream_id=2) date: Sun, 28 Oct 2018 02:46:33 GMT
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  0.101] recv HEADERS frame <length=25, flags=0x04, stream_id=2>
+          ; END_HEADERS
+          (padlen=0)
+          ; First push response header
+Start measure time 50
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8080, payloadleft=8304
+recv: data_readlen=8080
+recv: connection recv_window_size=8080, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=112
+recv: data_readlen=8192
+recv: connection recv_window_size=16272, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=112, payloadleft=0
+recv: data_readlen=112
+[  0.101] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 7 frames    Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp inf
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8071, payloadleft=8313
+recv: data_readlen=8071
+recv: connection recv_window_size=24455, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=121
+recv: data_readlen=8192
+recv: connection recv_window_size=32647, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=121, payloadleft=0
+recv: data_readlen=121
+[  0.101] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 15 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 262144
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8062, payloadleft=8322
+recv: data_readlen=8062
+recv: connection recv_window_size=8062, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=2816, payloadleft=5506
+recv: data_readlen=2816
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=0, type=4, flags=0x01, stream_id=0
+send: start transmitting frame type=4, length=9
+[  0.101] send SETTINGS frame <length=0, flags=0x01, stream_id=0>
+          ; ACK
+          (niv=0)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb480
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.101] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32768)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=10878, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=5506, payloadleft=0
+recv: data_readlen=5506
+[  0.151] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 23 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 7864.32
+recv: [IB_READ_HEAD]
+recv: payloadlen=16383, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=2677, payloadleft=13706
+recv: data_readlen=2677
+recv: connection recv_window_size=19061, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=5514
+recv: data_readlen=8192
+recv: connection recv_window_size=27253, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=5514, payloadleft=0
+recv: data_readlen=5514
+[  0.151] recv DATA frame <length=16383, flags=0x00, stream_id=2>
+Face 0: 30 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10485.6
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.151] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32767)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=8183, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.151] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 38 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 12850
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=24558, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=32750, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.151] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 46 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 15420.1
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.151] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32768)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=8183, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.201] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 54 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 9084.12
+recv: [IB_READ_HEAD]
+recv: payloadlen=16383, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8209
+recv: data_readlen=8174
+recv: connection recv_window_size=24558, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=17
+recv: data_readlen=8192
+recv: connection recv_window_size=32750, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=17, payloadleft=0
+recv: data_readlen=17
+[  0.201] recv DATA frame <length=16383, flags=0x00, stream_id=2>
+Face 0: 61 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10381.8
+TOtal rate request1997.32
+download_time_est 961 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.201] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32767)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=8183, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.201] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 69 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11679.5
+TOtal rate request1997.32
+download_time_est 855 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=24558, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=32750, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.201] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 77 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 12977.3
+TOtal rate request1997.32
+download_time_est 769 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.202] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32768)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=8183, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.251] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 85 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 9548.19
+TOtal rate request1997.32
+download_time_est 1045 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16383, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8209
+recv: data_readlen=8174
+recv: connection recv_window_size=24558, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=17
+recv: data_readlen=8192
+recv: connection recv_window_size=32750, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=17, payloadleft=0
+recv: data_readlen=17
+[  0.251] recv DATA frame <length=16383, flags=0x00, stream_id=2>
+Face 0: 92 frames   Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10416.2
+TOtal rate request1997.32
+download_time_est 958 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.251] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32767)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=8183, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.252] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 100 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11284.2
+TOtal rate request1997.32
+download_time_est 885 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=24558, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=32750, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.252] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 108 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 12152.2
+TOtal rate request1997.32
+download_time_est 821 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.252] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32768)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=8183, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.302] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 116 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 9781.37
+TOtal rate request1997.32
+download_time_est 1020 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16383, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8209
+recv: data_readlen=8174
+recv: connection recv_window_size=24558, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=17
+recv: data_readlen=8192
+recv: connection recv_window_size=32750, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=17, payloadleft=0
+recv: data_readlen=17
+[  0.302] recv DATA frame <length=16383, flags=0x00, stream_id=2>
+Face 0: 123 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10433.4
+TOtal rate request1997.32
+download_time_est 957 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8166, payloadleft=8218
+recv: data_readlen=8166
+recv: connection recv_window_size=8166, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=26
+recv: data_readlen=8192
+recv: connection recv_window_size=16358, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=26, payloadleft=0
+recv: data_readlen=26
+[  0.302] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 131 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11030.7
+TOtal rate request1997.32
+download_time_est 905 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8157, payloadleft=8227
+recv: data_readlen=8157
+recv: connection recv_window_size=24541, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=35
+recv: data_readlen=8192
+recv: connection recv_window_size=32733, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=35, payloadleft=0
+recv: data_readlen=35
+[  0.302] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 139 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11679.5
+TOtal rate request1997.32
+download_time_est 855 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.302] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32767)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.302] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32768)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb480
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=8183, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.352] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 147 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 9882.29
+TOtal rate request1997.32
+download_time_est 1010 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=24558, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=32750, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.352] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 154 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10402.4
+TOtal rate request1997.32
+download_time_est 960 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8165, payloadleft=8219
+recv: data_readlen=8165
+recv: connection recv_window_size=8165, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=27
+recv: data_readlen=8192
+recv: connection recv_window_size=16357, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=27, payloadleft=0
+recv: data_readlen=27
+[  0.352] recv DATA frame <length=16384, flags=0x00, stream_id=2>
+Face 0: 162 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10922.5
+TOtal rate request1997.32
+download_time_est 914 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16383, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8156, payloadleft=8227
+recv: data_readlen=8156
+recv: connection recv_window_size=24540, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=35
+recv: data_readlen=8192
+recv: connection recv_window_size=32732, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=35, payloadleft=0
+recv: data_readlen=35
+[  0.352] recv DATA frame <length=16383, flags=0x00, stream_id=2>
+Face 0: 170 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11442.6
+TOtal rate request1997.32
+download_time_est 872 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.352] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32768)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb480
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.352] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=32767)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=14557, type=0, flags=0x00, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=6374
+recv: data_readlen=8183
+recv: connection recv_window_size=8183, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=6374, payloadleft=0
+recv: data_readlen=6374
+[  0.403] recv DATA frame <length=14557, flags=0x00, stream_id=2>
+Face 0: 177 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 9933.77
+TOtal rate request1997.32
+download_time_est 1005 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=0, flags=0x01, stream_id=2
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=0, payloadleft=0
+[  0.403] recv DATA frame <length=0, flags=0x01, stream_id=2>
+          ; END_STREAM
+Curr_thrp 9933.77
+stream: stream(0x7f3420424800)=2 close
+stream: destroy closed stream(0x7f3420424800)=2
+stream: dep_remove stream(0x7f3420424800)=2
+recv: [IB_READ_HEAD]
+recv: payloadlen=2, type=1, flags=0x04, stream_id=13
+recv: HEADERS
+recv: no padding in payload
+recv: call on_begin_headers callback stream_id=13
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=2, payloadleft=0
+recv: block final=1
+recv: decoding header block 2 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 8
+inflatehd: index=8
+inflatehd: header emission: :status: 200
+recv: proclen=1
+[  0.403] recv (stream_id=13) :status: 200
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 62
+inflatehd: index=62
+inflatehd: header emission: date: Sun, 28 Oct 2018 02:46:33 GMT
+recv: proclen=1
+[  0.403] recv (stream_id=13) date: Sun, 28 Oct 2018 02:46:33 GMT
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  0.403] recv HEADERS frame <length=2, flags=0x04, stream_id=13>
+          ; END_HEADERS
+          (padlen=0)
+          ; First response header
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=0, flags=0x01, stream_id=13
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=0, payloadleft=0
+[  0.403] recv DATA frame <length=0, flags=0x01, stream_id=13>
+          ; END_STREAM
+Curr_thrp 9900.99
+stream: stream(0x7f3420424720)=13 close
+#[UTD2017_adaptation_vr]: iter_id=0
+#[UTD2017_adaptation_vr] req_stream_id: 15
+stream: destroy closed stream(0x7f3420424720)=13
+stream: dep_remove stream(0x7f3420424720)=13
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+stream: dep_add dep_stream(0x7f34204a5820)=0, stream(0x7f3420424720)=15
+deflatehd: deflating :method: GET
+deflatehd: name/value match index=1
+deflatehd: emit indexed index=1, 1 bytes
+deflatehd: deflating :path: /face0/bitrate=3000/num=1
+deflatehd: name match index=3
+deflatehd: emit indname index=3, valuelen=25, indexing_mode=1
+deflatehd: emit string str=/face0/bitrate=3000/num=1, length=25, huffman=1, encoded_length=18
+deflatehd: deflating :scheme: http
+deflatehd: name/value match index=5
+deflatehd: emit indexed index=5, 1 bytes
+deflatehd: deflating :authority: 127.0.0.1:3002
+deflatehd: name/value match index=63
+deflatehd: emit indexed index=63, 1 bytes
+deflatehd: deflating accept: */*
+deflatehd: name/value match index=62
+deflatehd: emit indexed index=62, 1 bytes
+deflatehd: deflating accept-encoding: gzip, deflate
+deflatehd: name/value match index=15
+deflatehd: emit indexed index=15, 1 bytes
+deflatehd: deflating user-agent: nghttp2/1.18.1
+deflatehd: name/value match index=61
+deflatehd: emit indexed index=61, 1 bytes
+deflatehd: all input name/value pairs were deflated
+send: HEADERS/PUSH_PROMISE, payloadlen=31
+send: before padding, HEADERS serialized in 40 bytes
+send: padding selected: payloadlen=31, padlen=0
+send: padlen = 0, nothing to do
+send: HEADERS finally serialized in 40 bytes
+send: next frame: payloadlen=31, type=1, flags=0x25, stream_id=15
+send: start transmitting frame type=1, length=40
+[  0.403] send HEADERS frame <length=31, flags=0x25, stream_id=15>
+          ; END_STREAM | END_HEADERS | PRIORITY
+          (padlen=0, dep_stream_id=13, weight=20, exclusive=0)
+          ; Open new stream
+          :method: GET
+          :path: /face0/bitrate=3000/num=1
+          :scheme: http
+          :authority: 127.0.0.1:3002
+          accept: */*
+          accept-encoding: gzip, deflate
+          user-agent: nghttp2/1.18.1
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=14557, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=25, type=5, flags=0x04, stream_id=15
+recv: PUSH_PROMISE
+recv: no padding in payload
+recv: [IB_READ_NBYTE]
+recv: readlen=4, payloadleft=21, left=0
+stream: dep_add dep_stream(0x7f3420424720)=15, stream(0x7f3420424800)=4
+recv: call on_begin_headers callback stream_id=15
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=21, payloadleft=0
+recv: block final=1
+recv: decoding header block 21 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 2
+inflatehd: index=2
+inflatehd: header emission: :method: GET
+recv: proclen=1
+[  0.453] recv (stream_id=15) :method: GET
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 6
+inflatehd: index=6
+inflatehd: header emission: :scheme: http
+recv: proclen=1
+[  0.453] recv (stream_id=15) :scheme: http
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 63
+inflatehd: index=63
+inflatehd: header emission: :authority: 127.0.0.1:3002
+recv: proclen=1
+[  0.453] recv (stream_id=15) :authority: 127.0.0.1:3002
+inflatehd: start state=2
+inflatehd: literal header repr - indexed name
+inflatehd: indexing required=0, no_index=0
+inflatehd: decoded integer is 4
+inflatehd: index=4
+inflatehd: huffman encoded=1
+inflatehd: decoded integer is 16
+inflatehd: valuelen=16
+inflatehd: 16 bytes read
+inflatehd: header emission: :path: /seg_2_rate_3000_face_0
+recv: proclen=18
+[  0.454] recv (stream_id=15) :path: /seg_2_rate_3000_face_0
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  0.454] recv PUSH_PROMISE frame <length=25, flags=0x04, stream_id=15>
+          ; END_HEADERS
+          (padlen=0, promised_stream_id=4)
+recv: [IB_READ_HEAD]
+recv: payloadlen=2, type=1, flags=0x04, stream_id=4
+recv: HEADERS
+recv: no padding in payload
+recv: call on_begin_headers callback stream_id=4
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=2, payloadleft=0
+recv: block final=1
+recv: decoding header block 2 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 8
+inflatehd: index=8
+inflatehd: header emission: :status: 200
+recv: proclen=1
+[  0.454] recv (stream_id=4) :status: 200
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 62
+inflatehd: index=62
+inflatehd: header emission: date: Sun, 28 Oct 2018 02:46:33 GMT
+recv: proclen=1
+[  0.454] recv (stream_id=4) date: Sun, 28 Oct 2018 02:46:33 GMT
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  0.454] recv HEADERS frame <length=2, flags=0x04, stream_id=4>
+          ; END_HEADERS
+          (padlen=0)
+          ; First push response header
+Start measure time 403
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8138, payloadleft=8246
+recv: data_readlen=8138
+recv: connection recv_window_size=22695, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=54
+recv: data_readlen=8192
+recv: connection recv_window_size=30887, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=54, payloadleft=0
+recv: data_readlen=54
+[  0.454] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 185 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp inf
+TOtal rate request1997.32
+download_time_est 0 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8129, payloadleft=8255
+recv: data_readlen=8129
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=63
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=63, payloadleft=0
+recv: data_readlen=63
+[  0.454] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 192 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp inf
+TOtal rate request1997.32
+download_time_est 0 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8120, payloadleft=8264
+recv: data_readlen=8120
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=72
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=72, payloadleft=0
+recv: data_readlen=72
+[  0.454] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 200 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp inf
+TOtal rate request1997.32
+download_time_est 0 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=1826, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=1826, payloadleft=0
+recv: data_readlen=1826
+[  0.454] recv DATA frame <length=1826, flags=0x00, stream_id=4>
+Face 0: 201 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp inf
+TOtal rate request1997.32
+download_time_est 0 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.454] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=39070)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=26465, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.504] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 209 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 69390.1
+TOtal rate request1997.32
+download_time_est 143 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.504] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 216 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 71960.2
+TOtal rate request1997.32
+download_time_est 138 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=6302, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=6302, payloadleft=0
+recv: data_readlen=6302
+[  0.504] recv DATA frame <length=6302, flags=0x00, stream_id=4>
+Face 0: 219 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 72948.7
+TOtal rate request1997.32
+download_time_est 136 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.504] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=34648)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=30887, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.555] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 227 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 38133.2
+TOtal rate request1997.32
+download_time_est 261 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.555] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 235 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 39431
+TOtal rate request1997.32
+download_time_est 253 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=1880, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=1880, payloadleft=0
+recv: data_readlen=1880
+[  0.555] recv DATA frame <length=1880, flags=0x00, stream_id=4>
+Face 0: 236 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 39579.9
+TOtal rate request1997.32
+download_time_est 252 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.555] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=39070)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=26465, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.605] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 244 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 27162.1
+TOtal rate request1997.32
+download_time_est 367 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.605] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 251 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 28024.4
+TOtal rate request1997.32
+download_time_est 356 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=6302, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=6302, payloadleft=0
+recv: data_readlen=6302
+[  0.605] recv DATA frame <length=6302, flags=0x00, stream_id=4>
+Face 0: 254 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 28356.1
+TOtal rate request1997.32
+download_time_est 352 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.605] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=34648)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=30887, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.655] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 262 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 21986.1
+TOtal rate request1997.32
+download_time_est 454 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.655] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 270 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 22635
+TOtal rate request1997.32
+download_time_est 441 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=1880, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=1880, payloadleft=0
+recv: data_readlen=1880
+[  0.656] recv DATA frame <length=1880, flags=0x00, stream_id=4>
+Face 0: 271 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 22709.5
+TOtal rate request1997.32
+download_time_est 439 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.656] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=39070)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=26465, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.706] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 278 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 18723.7
+TOtal rate request1997.32
+download_time_est 533 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.706] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 286 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 19167.8
+TOtal rate request1997.32
+download_time_est 521 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=6302, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=6302, payloadleft=0
+recv: data_readlen=6302
+[  0.706] recv DATA frame <length=6302, flags=0x00, stream_id=4>
+Face 0: 289 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 19367.1
+TOtal rate request1997.32
+download_time_est 515 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.706] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=34648)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=30887, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.756] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 297 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 16603.8
+TOtal rate request1997.32
+download_time_est 601 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.756] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 305 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 17036.4
+TOtal rate request1997.32
+download_time_est 586 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=1880, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=1880, payloadleft=0
+recv: data_readlen=1880
+[  0.756] recv DATA frame <length=1880, flags=0x00, stream_id=4>
+Face 0: 306 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 17086
+TOtal rate request1997.32
+download_time_est 584 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.756] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=39070)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=26465, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.807] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 313 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 15037.2
+TOtal rate request1997.32
+download_time_est 664 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.807] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 321 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 15408.5
+TOtal rate request1997.32
+download_time_est 648 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=6302, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=6302, payloadleft=0
+recv: data_readlen=6302
+[  0.807] recv DATA frame <length=6302, flags=0x00, stream_id=4>
+Face 0: 324 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 15551.3
+TOtal rate request1997.32
+download_time_est 642 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.807] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=34648)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=30887, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.857] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 332 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 13912.6
+TOtal rate request1997.32
+download_time_est 717 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  0.857] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 340 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 14237
+TOtal rate request1997.32
+download_time_est 701 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=1880, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=1880, payloadleft=0
+recv: data_readlen=1880
+[  0.857] recv DATA frame <length=1880, flags=0x00, stream_id=4>
+Face 0: 340 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 14274.3
+TOtal rate request1997.32
+download_time_est 699 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.857] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=39070)
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: connection recv_window_size=26465, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  0.908] recv DATA frame <length=16384, flags=0x00, stream_id=4>
+Face 0: 348 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 12990.9
+TOtal rate request1997.32
+download_time_est 768 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=12766, type=0, flags=0x00, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=4592
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=100
+recv: [IB_READ_DATA]
+recv: readlen=4592, payloadleft=0
+recv: data_readlen=4592
+[  0.908] recv DATA frame <length=12766, flags=0x00, stream_id=4>
+Face 0: 354 frames  Face 1: 0 frames    Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 13215.9
+TOtal rate request1997.32
+download_time_est 755 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=0, flags=0x01, stream_id=4
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=0, payloadleft=0
+[  0.908] recv DATA frame <length=0, flags=0x01, stream_id=4>
+          ; END_STREAM
+Curr_thrp 13215.9
+stream: stream(0x7f3420424800)=4 close
+stream: destroy closed stream(0x7f3420424800)=4
+stream: dep_remove stream(0x7f3420424800)=4
+recv: [IB_READ_HEAD]
+recv: payloadlen=2, type=1, flags=0x04, stream_id=15
+recv: HEADERS
+recv: no padding in payload
+recv: call on_begin_headers callback stream_id=15
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=2, payloadleft=0
+recv: block final=1
+recv: decoding header block 2 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 8
+inflatehd: index=8
+inflatehd: header emission: :status: 200
+recv: proclen=1
+[  0.908] recv (stream_id=15) :status: 200
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 62
+inflatehd: index=62
+inflatehd: header emission: date: Sun, 28 Oct 2018 02:46:33 GMT
+recv: proclen=1
+[  0.908] recv (stream_id=15) date: Sun, 28 Oct 2018 02:46:33 GMT
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  0.908] recv HEADERS frame <length=2, flags=0x04, stream_id=15>
+          ; END_HEADERS
+          (padlen=0)
+          ; First response header
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=0, flags=0x01, stream_id=15
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=0, payloadleft=0
+[  0.908] recv DATA frame <length=0, flags=0x01, stream_id=15>
+          ; END_STREAM
+Curr_thrp 13215.9
+stream: stream(0x7f3420424720)=15 close
+#[on_stream_close] stream stats #15
+1, 0, 3000, 20, 353.115, 857.811, 5944.17
+#[UTD2017_adaptation_vr]: iter_id=1
+#[UTD2017_adaptation_vr] req_stream_id: 17
+#[UTD2017_adaptation_vr] req_stream_id: 19
+stream: destroy closed stream(0x7f3420424720)=15
+stream: dep_remove stream(0x7f3420424720)=15
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: next frame: payloadlen=6, type=4, flags=0x00, stream_id=0
+send: start transmitting frame type=4, length=15
+[  0.908] send SETTINGS frame <length=6, flags=0x00, stream_id=0>
+          (niv=1)
+          [SETTINGS_MAX_CONCURRENT_STREAMS(0x03):1]
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb480
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.908] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=34648)
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb340
+stream: dep_add dep_stream(0x7f34204a5820)=0, stream(0x7f3420424720)=17
+deflatehd: deflating :method: GET
+deflatehd: name/value match index=1
+deflatehd: emit indexed index=1, 1 bytes
+deflatehd: deflating :path: /face1/bitrate=800/num=1
+deflatehd: name match index=3
+deflatehd: emit indname index=3, valuelen=24, indexing_mode=1
+deflatehd: emit string str=/face1/bitrate=800/num=1, length=24, huffman=1, encoded_length=17
+deflatehd: deflating :scheme: http
+deflatehd: name/value match index=5
+deflatehd: emit indexed index=5, 1 bytes
+deflatehd: deflating :authority: 127.0.0.1:3002
+deflatehd: name/value match index=63
+deflatehd: emit indexed index=63, 1 bytes
+deflatehd: deflating accept: */*
+deflatehd: name/value match index=62
+deflatehd: emit indexed index=62, 1 bytes
+deflatehd: deflating accept-encoding: gzip, deflate
+deflatehd: name/value match index=15
+deflatehd: emit indexed index=15, 1 bytes
+deflatehd: deflating user-agent: nghttp2/1.18.1
+deflatehd: name/value match index=61
+deflatehd: emit indexed index=61, 1 bytes
+deflatehd: all input name/value pairs were deflated
+send: HEADERS/PUSH_PROMISE, payloadlen=30
+send: before padding, HEADERS serialized in 39 bytes
+send: padding selected: payloadlen=30, padlen=0
+send: padlen = 0, nothing to do
+send: HEADERS finally serialized in 39 bytes
+send: next frame: payloadlen=30, type=1, flags=0x25, stream_id=17
+send: start transmitting frame type=1, length=39
+[  0.908] send HEADERS frame <length=30, flags=0x25, stream_id=17>
+          ; END_STREAM | END_HEADERS | PRIORITY
+          (padlen=0, dep_stream_id=15, weight=20, exclusive=0)
+          ; Open new stream
+          :method: GET
+          :path: /face1/bitrate=800/num=1
+          :scheme: http
+          :authority: 127.0.0.1:3002
+          accept: */*
+          accept-encoding: gzip, deflate
+          user-agent: nghttp2/1.18.1
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb2a0
+stream: dep_add dep_stream(0x7f3420424720)=17, stream(0x7f3420424800)=19
+deflatehd: deflating :method: GET
+deflatehd: name/value match index=1
+deflatehd: emit indexed index=1, 1 bytes
+deflatehd: deflating :path: /face2/bitrate=800/num=1
+deflatehd: name match index=3
+deflatehd: emit indname index=3, valuelen=24, indexing_mode=1
+deflatehd: emit string str=/face2/bitrate=800/num=1, length=24, huffman=1, encoded_length=17
+deflatehd: deflating :scheme: http
+deflatehd: name/value match index=5
+deflatehd: emit indexed index=5, 1 bytes
+deflatehd: deflating :authority: 127.0.0.1:3002
+deflatehd: name/value match index=63
+deflatehd: emit indexed index=63, 1 bytes
+deflatehd: deflating accept: */*
+deflatehd: name/value match index=62
+deflatehd: emit indexed index=62, 1 bytes
+deflatehd: deflating accept-encoding: gzip, deflate
+deflatehd: name/value match index=15
+deflatehd: emit indexed index=15, 1 bytes
+deflatehd: deflating user-agent: nghttp2/1.18.1
+deflatehd: name/value match index=61
+deflatehd: emit indexed index=61, 1 bytes
+deflatehd: all input name/value pairs were deflated
+send: HEADERS/PUSH_PROMISE, payloadlen=30
+send: before padding, HEADERS serialized in 39 bytes
+send: padding selected: payloadlen=30, padlen=0
+send: padlen = 0, nothing to do
+send: HEADERS finally serialized in 39 bytes
+send: next frame: payloadlen=30, type=1, flags=0x25, stream_id=19
+send: start transmitting frame type=1, length=39
+[  0.908] send HEADERS frame <length=30, flags=0x25, stream_id=19>
+          ; END_STREAM | END_HEADERS | PRIORITY
+          (padlen=0, dep_stream_id=17, weight=20, exclusive=0)
+          ; Open new stream
+          :method: GET
+          :path: /face2/bitrate=800/num=1
+          :scheme: http
+          :authority: 127.0.0.1:3002
+          accept: */*
+          accept-encoding: gzip, deflate
+          user-agent: nghttp2/1.18.1
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb200
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: connection recv_window_size=20967, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=4, flags=0x01, stream_id=0
+recv: SETTINGS
+recv: [IB_READ_SETTINGS]
+recv: readlen=0, payloadleft=0
+[  0.958] recv SETTINGS frame <length=0, flags=0x01, stream_id=0>
+          ; ACK
+          (niv=0)
+recv: [IB_READ_HEAD]
+recv: payloadlen=25, type=5, flags=0x04, stream_id=17
+recv: PUSH_PROMISE
+recv: no padding in payload
+recv: [IB_READ_NBYTE]
+recv: readlen=4, payloadleft=21, left=0
+stream: dep_add dep_stream(0x7f3420424720)=17, stream(0x7f34204248e0)=6
+recv: call on_begin_headers callback stream_id=17
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=21, payloadleft=0
+recv: block final=1
+recv: decoding header block 21 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 2
+inflatehd: index=2
+inflatehd: header emission: :method: GET
+recv: proclen=1
+[  0.958] recv (stream_id=17) :method: GET
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 6
+inflatehd: index=6
+inflatehd: header emission: :scheme: http
+recv: proclen=1
+[  0.958] recv (stream_id=17) :scheme: http
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 63
+inflatehd: index=63
+inflatehd: header emission: :authority: 127.0.0.1:3002
+recv: proclen=1
+[  0.958] recv (stream_id=17) :authority: 127.0.0.1:3002
+inflatehd: start state=2
+inflatehd: literal header repr - indexed name
+inflatehd: indexing required=0, no_index=0
+inflatehd: decoded integer is 4
+inflatehd: index=4
+inflatehd: huffman encoded=1
+inflatehd: decoded integer is 16
+inflatehd: valuelen=16
+inflatehd: 16 bytes read
+inflatehd: header emission: :path: /seg_3_rate_800_face_1
+recv: proclen=18
+[  0.958] recv (stream_id=17) :path: /seg_3_rate_800_face_1
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  0.958] recv PUSH_PROMISE frame <length=25, flags=0x04, stream_id=17>
+          ; END_HEADERS
+          (padlen=0, promised_stream_id=6)
+recv: [IB_READ_HEAD]
+recv: payloadlen=25, type=5, flags=0x04, stream_id=19
+recv: PUSH_PROMISE
+recv: no padding in payload
+recv: [IB_READ_NBYTE]
+recv: readlen=4, payloadleft=21, left=0
+stream: dep_add dep_stream(0x7f3420424800)=19, stream(0x7f34204249c0)=8
+recv: call on_begin_headers callback stream_id=19
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=21, payloadleft=0
+recv: block final=1
+recv: decoding header block 21 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 2
+inflatehd: index=2
+inflatehd: header emission: :method: GET
+recv: proclen=1
+[  0.958] recv (stream_id=19) :method: GET
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 6
+inflatehd: index=6
+inflatehd: header emission: :scheme: http
+recv: proclen=1
+[  0.958] recv (stream_id=19) :scheme: http
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 63
+inflatehd: index=63
+inflatehd: header emission: :authority: 127.0.0.1:3002
+recv: proclen=1
+[  0.958] recv (stream_id=19) :authority: 127.0.0.1:3002
+inflatehd: start state=2
+inflatehd: literal header repr - indexed name
+inflatehd: indexing required=0, no_index=0
+inflatehd: decoded integer is 4
+inflatehd: index=4
+inflatehd: huffman encoded=1
+inflatehd: decoded integer is 16
+inflatehd: valuelen=16
+inflatehd: 16 bytes read
+inflatehd: header emission: :path: /seg_3_rate_800_face_2
+recv: proclen=18
+[  0.959] recv (stream_id=19) :path: /seg_3_rate_800_face_2
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  0.959] recv PUSH_PROMISE frame <length=25, flags=0x04, stream_id=19>
+          ; END_HEADERS
+          (padlen=0, promised_stream_id=8)
+recv: [IB_READ_HEAD]
+recv: payloadlen=25, type=1, flags=0x04, stream_id=6
+recv: HEADERS
+recv: no padding in payload
+recv: call on_begin_headers callback stream_id=6
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=25, payloadleft=0
+recv: block final=1
+recv: decoding header block 25 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 8
+inflatehd: index=8
+inflatehd: header emission: :status: 200
+recv: proclen=1
+[  0.959] recv (stream_id=6) :status: 200
+inflatehd: start state=2
+inflatehd: literal header repr - indexed name
+inflatehd: indexing required=1, no_index=0
+inflatehd: decoded integer is 33
+inflatehd: index=33
+inflatehd: huffman encoded=1
+inflatehd: decoded integer is 22
+inflatehd: valuelen=22
+inflatehd: 22 bytes read
+inflatehd: header emission: date: Sun, 28 Oct 2018 02:46:34 GMT
+recv: proclen=24
+[  0.959] recv (stream_id=6) date: Sun, 28 Oct 2018 02:46:34 GMT
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  0.959] recv HEADERS frame <length=25, flags=0x04, stream_id=6>
+          ; END_HEADERS
+          (padlen=0)
+          ; First push response header
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=6
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8072, payloadleft=8312
+recv: data_readlen=8072
+recv: connection recv_window_size=29039, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=120
+recv: data_readlen=8192
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=120, payloadleft=0
+recv: data_readlen=120
+[  0.959] recv DATA frame <length=16384, flags=0x00, stream_id=6>
+Face 0: 354 frames  Face 1: 11 frames   Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 12140.7
+TOtal rate request1997.32
+download_time_est 822 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=6
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8063, payloadleft=8321
+recv: data_readlen=8063
+recv: connection recv_window_size=8183, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=129
+recv: data_readlen=8192
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=129, payloadleft=0
+recv: data_readlen=129
+[  0.959] recv DATA frame <length=16384, flags=0x00, stream_id=6>
+Face 0: 354 frames  Face 1: 23 frames   Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 12400.3
+TOtal rate request1997.32
+download_time_est 805 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=11800, type=0, flags=0x00, stream_id=6
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8054, payloadleft=3746
+recv: data_readlen=8054
+recv: connection recv_window_size=24558, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=3746, payloadleft=0
+recv: data_readlen=3746
+[  0.959] recv DATA frame <length=11800, flags=0x00, stream_id=6>
+Face 0: 354 frames  Face 1: 31 frames   Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 12587.2
+TOtal rate request1997.32
+download_time_est 793 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  0.959] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=37231)
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb200
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: connection recv_window_size=28304, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=6
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  1.009] recv DATA frame <length=16384, flags=0x00, stream_id=6>
+Face 0: 354 frames  Face 1: 42 frames   Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11668.4
+TOtal rate request1997.32
+download_time_est 855 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=6
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  1.009] recv DATA frame <length=16384, flags=0x00, stream_id=6>
+Face 0: 354 frames  Face 1: 54 frames   Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11904.1
+TOtal rate request1997.32
+download_time_est 838 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=4463, type=0, flags=0x00, stream_id=6
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=4463, payloadleft=0
+recv: data_readlen=4463
+[  1.009] recv DATA frame <length=4463, flags=0x00, stream_id=6>
+Face 0: 354 frames  Face 1: 57 frames   Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11968.3
+TOtal rate request1997.32
+download_time_est 834 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  1.009] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=36487)
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb200
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+Stop timer
+recv: connection recv_window_size=29048, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=6
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  1.060] recv DATA frame <length=16384, flags=0x00, stream_id=6>
+Face 0: 354 frames  Face 1: 69 frames   Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11197.1
+TOtal rate request1997.32
+download_time_est 891 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=1817, type=0, flags=0x00, stream_id=6
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=1817, payloadleft=0
+recv: data_readlen=1817
+[  1.060] recv DATA frame <length=1817, flags=0x00, stream_id=6>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 0 frames    Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11221.1
+TOtal rate request1997.32
+download_time_est 889 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=0, flags=0x01, stream_id=6
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=0, payloadleft=0
+[  1.060] recv DATA frame <length=0, flags=0x01, stream_id=6>
+          ; END_STREAM
+Curr_thrp 11221.1
+stream: stream(0x7f34204248e0)=6 close
+stream: destroy closed stream(0x7f34204248e0)=6
+stream: dep_remove stream(0x7f34204248e0)=6
+recv: [IB_READ_HEAD]
+recv: payloadlen=2, type=1, flags=0x04, stream_id=17
+recv: HEADERS
+recv: no padding in payload
+recv: call on_begin_headers callback stream_id=17
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=2, payloadleft=0
+recv: block final=1
+recv: decoding header block 2 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 8
+inflatehd: index=8
+inflatehd: header emission: :status: 200
+recv: proclen=1
+[  1.060] recv (stream_id=17) :status: 200
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 62
+inflatehd: index=62
+inflatehd: header emission: date: Sun, 28 Oct 2018 02:46:34 GMT
+recv: proclen=1
+[  1.060] recv (stream_id=17) date: Sun, 28 Oct 2018 02:46:34 GMT
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  1.060] recv HEADERS frame <length=2, flags=0x04, stream_id=17>
+          ; END_HEADERS
+          (padlen=0)
+          ; First response header
+recv: [IB_READ_HEAD]
+recv: payloadlen=2, type=1, flags=0x04, stream_id=8
+recv: HEADERS
+recv: no padding in payload
+recv: call on_begin_headers callback stream_id=8
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=2, payloadleft=0
+recv: block final=1
+recv: decoding header block 2 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 8
+inflatehd: index=8
+inflatehd: header emission: :status: 200
+recv: proclen=1
+[  1.060] recv (stream_id=8) :status: 200
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 62
+inflatehd: index=62
+inflatehd: header emission: date: Sun, 28 Oct 2018 02:46:34 GMT
+recv: proclen=1
+[  1.060] recv (stream_id=8) date: Sun, 28 Oct 2018 02:46:34 GMT
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  1.060] recv HEADERS frame <length=2, flags=0x04, stream_id=8>
+          ; END_HEADERS
+          (padlen=0)
+          ; First push response header
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=0, flags=0x01, stream_id=17
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=0, payloadleft=0
+[  1.060] recv DATA frame <length=0, flags=0x01, stream_id=17>
+          ; END_STREAM
+Curr_thrp 11221.1
+stream: stream(0x7f3420424720)=17 close
+#[on_stream_close] stream stats #17
+2, 1, 0, 0, 857.937, 1009.88, 0
+stream: destroy closed stream(0x7f3420424720)=17
+stream: dep_remove stream(0x7f3420424720)=17
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=6308, payloadleft=10076
+recv: data_readlen=6308
+recv: connection recv_window_size=16326, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=1884
+recv: data_readlen=8192
+recv: connection recv_window_size=24518, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=1884, payloadleft=0
+recv: data_readlen=1884
+[  1.060] recv DATA frame <length=16384, flags=0x00, stream_id=8>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 11 frames   Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11437.4
+TOtal rate request1997.32
+download_time_est 873 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=1902, type=0, flags=0x00, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=1902, payloadleft=0
+recv: data_readlen=1902
+[  1.060] recv DATA frame <length=1902, flags=0x00, stream_id=8>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 13 frames   Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11462.5
+TOtal rate request1997.32
+download_time_est 871 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  1.060] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=37231)
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb200
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: connection recv_window_size=28304, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  1.110] recv DATA frame <length=16384, flags=0x00, stream_id=8>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 24 frames   Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10772.2
+TOtal rate request1997.32
+download_time_est 927 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  1.110] recv DATA frame <length=16384, flags=0x00, stream_id=8>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 36 frames   Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10971.7
+TOtal rate request1997.32
+download_time_est 910 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=4463, type=0, flags=0x00, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=4463, payloadleft=0
+recv: data_readlen=4463
+[  1.110] recv DATA frame <length=4463, flags=0x00, stream_id=8>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 39 frames   Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 11026.1
+TOtal rate request1997.32
+download_time_est 905 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  1.110] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=36487)
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb200
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: connection recv_window_size=29048, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8183, payloadleft=8201
+recv: data_readlen=8183
+recv: connection recv_window_size=0, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=9
+recv: data_readlen=8192
+recv: connection recv_window_size=8192, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=9, payloadleft=0
+recv: data_readlen=9
+[  1.161] recv DATA frame <length=16384, flags=0x00, stream_id=8>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 51 frames   Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10431.7
+TOtal rate request1997.32
+download_time_est 957 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=16384, type=0, flags=0x00, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=8174, payloadleft=8210
+recv: data_readlen=8174
+recv: connection recv_window_size=16375, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=8192, payloadleft=18
+recv: data_readlen=8192
+recv: connection recv_window_size=24567, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_DATA]
+recv: readlen=18, payloadleft=0
+recv: data_readlen=18
+[  1.161] recv DATA frame <length=16384, flags=0x00, stream_id=8>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 63 frames   Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10617.1
+TOtal rate request1997.32
+download_time_est 940 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=3719, type=0, flags=0x00, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=3719, payloadleft=0
+recv: data_readlen=3719
+[  1.161] recv DATA frame <length=3719, flags=0x00, stream_id=8>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 66 frames   Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10659.2
+TOtal rate request1997.32
+download_time_est 936 9986600
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  1.161] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=37231)
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb200
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: connection recv_window_size=28304, local_window=65535
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+recv: [IB_READ_HEAD]
+recv: payloadlen=7996, type=0, flags=0x00, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=7996, payloadleft=0
+recv: data_readlen=7996
+[  1.211] recv DATA frame <length=7996, flags=0x00, stream_id=8>
+Face 0: 354 frames  Face 1: 70 frames   Face 2: 71 frames   Face 3: 0 frames    Face 4: 0 frames    Face 5: 0 frames    
+Curr_thrp 10026.4
+TOtal rate request1997.32
+download_time_est 996 9986600
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=0, flags=0x01, stream_id=8
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=0, payloadleft=0
+[  1.211] recv DATA frame <length=0, flags=0x01, stream_id=8>
+          ; END_STREAM
+Curr_thrp 10026.4
+stream: stream(0x7f34204249c0)=8 close
+stream: destroy closed stream(0x7f34204249c0)=8
+stream: dep_remove stream(0x7f34204249c0)=8
+recv: [IB_READ_HEAD]
+recv: payloadlen=2, type=1, flags=0x04, stream_id=19
+recv: HEADERS
+recv: no padding in payload
+recv: call on_begin_headers callback stream_id=19
+recv: [IB_READ_HEADER_BLOCK]
+recv: readlen=2, payloadleft=0
+recv: block final=1
+recv: decoding header block 2 bytes
+inflatehd: start state=1
+inflatehd: indexed repr
+inflatehd: decoded integer is 8
+inflatehd: index=8
+inflatehd: header emission: :status: 200
+recv: proclen=1
+[  1.211] recv (stream_id=19) :status: 200
+inflatehd: start state=2
+inflatehd: indexed repr
+inflatehd: decoded integer is 62
+inflatehd: index=62
+inflatehd: header emission: date: Sun, 28 Oct 2018 02:46:34 GMT
+recv: proclen=1
+[  1.211] recv (stream_id=19) date: Sun, 28 Oct 2018 02:46:34 GMT
+inflatehd: start state=2
+inflatehd: all input bytes were processed
+inflatehd: in_final set
+recv: proclen=0
+[  1.211] recv HEADERS frame <length=2, flags=0x04, stream_id=19>
+          ; END_HEADERS
+          (padlen=0)
+          ; First response header
+recv: [IB_READ_HEAD]
+recv: payloadlen=0, type=0, flags=0x01, stream_id=19
+recv: DATA
+recv: no padding in payload
+recv: [IB_READ_DATA]
+recv: readlen=0, payloadleft=0
+[  1.211] recv DATA frame <length=0, flags=0x01, stream_id=19>
+          ; END_STREAM
+Curr_thrp 10026.4
+stream: stream(0x7f3420424800)=19 close
+#[on_stream_close] stream stats #19
+2, 2, 0, 0, 857.996, 1161.23, 0
+#[UTD2017_adaptation_vr]: iter_id=2
+stream: destroy closed stream(0x7f3420424800)=19
+stream: dep_remove stream(0x7f3420424800)=19
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: next frame: payloadlen=4, type=8, flags=0x00, stream_id=0
+send: start transmitting frame type=8, length=13
+[  1.211] send WINDOW_UPDATE frame <length=4, flags=0x00, stream_id=0>
+          (window_size_increment=36300)
+stream: adjusting kept idle streams num_idle_streams=5, max=16
+send: end transmission of a frame
+send: reset nghttp2_active_outbound_item
+send: aob->item = 0x7f34204cb200
+stream: adjusting kept idle streams num_idle_streams=5, max=16

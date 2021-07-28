@@ -1,0 +1,6 @@
+- At t=T/2
+ + Step 1: re-decide the optimal tile versions based on the updated viewport.
+ + Step 2: 
+ 	- Step 2.1. Send new GET requests for new visible tiles
+ 	- Step 2.2. Send 'DELETE' for the old visible tiles
+ + 

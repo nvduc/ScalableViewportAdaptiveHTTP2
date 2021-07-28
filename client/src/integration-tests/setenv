@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+libdir="/home/nguyen/Desktop/ScalableViewportAdaptiveHTTP2/client/src/lib"
+if [ -d "$libdir/.libs" ]; then
+    libdir="$libdir/.libs"
+fi
+
+export CGO_CFLAGS="-I/home/nguyen/Desktop/ScalableViewportAdaptiveHTTP2/client/src/lib/includes -I/home/nguyen/Desktop/ScalableViewportAdaptiveHTTP2/client/src/lib/includes"
+export CGO_LDFLAGS="-L$libdir"
+export LD_LIBRARY_PATH="$libdir"
+export GODEBUG=cgocheck=0
+"$@"
