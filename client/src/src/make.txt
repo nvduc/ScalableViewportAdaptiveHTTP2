@@ -1,7 +1,0 @@
-Making all in includes
-make[1]: Entering directory `/home/haidang/client/src/includes'
-make[1]: Nothing to be done for `all'.
-make[1]: Leaving directory `/home/haidang/client/src/includes'
-make[1]: Entering directory `/home/haidang/client/src'
-  CXX      nghttp.o
-make[1]: Leaving directory `/home/haidang/client/src'
