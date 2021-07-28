@@ -36,6 +36,7 @@
 #endif // HAVE_NETINET_IN_H
 #include <netinet/tcp.h>
 #include <getopt.h>
+#include <chrono>
 
 #include <cassert>
 #include <cstdio>
@@ -50,7 +51,7 @@
 #include <ctime>
 #include <openssl/err.h>
 #include <math.h>
-
+#include <utility>
 #ifdef HAVE_JANSSON
 #include <jansson.h>
 #endif // HAVE_JANSSON
@@ -73,16 +74,63 @@
 //#include <boost/bind.hpp>
 //#include <nghttp2/asio_http2_server.h>
 #include <netdb.h>
+
 #include <netinet/in.h>
+
+#include "duc_metric.h"
+//#include "common.h"
 
 #ifndef O_BINARY
 #define O_BINARY (0)
 #endif // O_BINARY
 using namespace std;
-//using namespace boost::posix_time;
-int a=0;
-std::vector<int> hung_rate_set = {200, 250, 300, 400, 500, 600, 700, 900, 1200, 1500, 2000, 2500, 3000, 4000, 5000, 6000};
+// using namespace boost::posix_time;
+int a = 0;
+std::vector<int> hung_rate_set = {200,  250,  300,  400,  500,  600,
+                                  700,  900,  1200, 1500, 2000, 2500,
+                                  3000, 4000, 5000, 6000};
 
+const char *confFile = "metadata/metadata.cfg";
+Manifest meta(confFile);
+
+/* metrics */
+Metric metric(meta.NO_SEG, meta.NO_FACE, meta.EL_VER_NUM + 1);
+
+/* Buffer */
+// Buffer buff(meta.NO_SEG, NO_TILE);
+
+/* head traces */
+Headtrace htrace(meta.htrace.c_str(), meta.VLEN *meta.FPS, meta.FPS);
+
+/* visible mask */
+VisibleMask vmask(meta.vmask.c_str(), meta.NO_TILE);
+
+/* Player */
+Player player(meta.BASE_BUFF_THRES, meta.VLEN, meta.SD, meta.NO_TILE, &vmask,
+              &htrace, meta.ALG, meta.base_layer_br, meta.EL_VER_NUM,
+              meta.enha_layer_br);
+thread player_thread(&Player::start_playback, &player);
+
+/* download status */
+int req_s_num = 0;   /* number of request streams */
+int fin_s_num = 0;   /* number of finsihed streams */
+int BL_seg_id = 0;   /* base layer segment id */
+int EL_seg_id = 0;   /* enhancement layer segment id */
+int play_seg_id = 0; /* playing segment id */
+int INI_STREAM_ID =
+    13; /* First request stream id -> adaptation start *after* this stream */
+int cur_req_stream_id; /* current request stream id */
+int iter_id = 0;       /* downloading interation */
+bool INI_BUFFERING = true;
+bool RE_BUFFERRING = false;
+int LAST_ITER_MASK = 1;
+int max_layerId = 4, min_layerId = 1;
+
+/* cancelled stream */
+vector<int> cancelled_request_stream;
+
+/* output logs */
+FILE *log_stream, *log_iter;
 
 namespace nghttp2 {
 
@@ -109,7 +157,11 @@ enum {
 
 namespace {
 constexpr auto anchors = std::array<Anchor, 5>{{
-    {3, 0, 201}, {5, 0, 101}, {7, 0, 1}, {9, 7, 1}, {11, 3, 1},
+    {3, 0, 201},
+    {5, 0, 101},
+    {7, 0, 1},
+    {9, 7, 1},
+    {11, 3, 1},
 }};
 } // namespace
 
@@ -507,53 +559,49 @@ int submit_request(HttpClient *client, const Headers &headers, Request *req) {
 } // namespace
 
 // Hung: commons
- //ms
-int       hung_MAX_SEGMENTS = 2001;
+// ms
+int hung_MAX_SEGMENTS = 2001;
 
 // Hung: for clocks
 int hung_sys_time = 0;
-int hung_last_adapt_time[] = {0,0};
+int hung_last_adapt_time[] = {0, 0};
 int hung_client_seg = 0;
 
 // Hung: temporary store => don't understand why
-std::string           hung_uri;
+std::string hung_uri;
 nghttp2_data_provider *hung_data_prd;
-int64_t               hung_data_length;
+int64_t hung_data_length;
 nghttp2_priority_spec hung_pri_spec;
-Headers               hung_headers;
+Headers hung_headers;
+nghttp2_priority_spec trung_pri_spec;
 
 // Hung: measurement
 
+double hung_inst_thrp = 1000;
+int hung_cur_buff = 5000;
+// int dang_cur_buff[]={5500,5500};
 
+double thrp_est = 0, smoothedBW;
 
-
-double           hung_inst_thrp = 1000;
-int              hung_cur_buff = 5000;
-//int dang_cur_buff[]={5500,5500};
-
-double            thrp_est = 0, smoothedBW;
-
-double               hung_safety_margin = 0.1;
+double hung_safety_margin = 0.1;
 bool first_request = true;
-bool first_adapt =true;
+bool first_adapt = true;
 
-enum Thrp_est_method {Instant, Mix};
-//Thrp_est_method      thrp_est_method;
+enum Thrp_est_method { Instant, Mix };
+// Thrp_est_method      thrp_est_method;
 
 // int                  hung_cur_rtt = 50;     // ik1 => 220ms
 // int                  hung_K = 4;
 
-
-
 // Hung: recorders
-std::vector<int>     hung_seg_recorder;
-std::vector<int>     hung_time_recorder;
-std::vector<int>     hung_rate_recorder;
-std::vector<double>  hung_thrp_recorder;
-std::vector<int>     hung_buff_recorder;
+std::vector<int> hung_seg_recorder;
+std::vector<int> hung_time_recorder;
+std::vector<int> hung_rate_recorder;
+std::vector<double> hung_thrp_recorder;
+std::vector<int> hung_buff_recorder;
 vector<double> time_download_recorder;
 
-std::vector<double> thrp_est_recorder,smooth_thrp_recoder;
+std::vector<double> thrp_est_recorder, smooth_thrp_recoder;
 //-------------------------------------------------------
 // double window_bits;
 double safety_margin = 0.1;
@@ -563,9 +611,9 @@ double safety_margin = 0.1;
 // bool set_block=true;
 // int request1=0,request2=0;
 nghttp2_data_provider *dang_data_prd;
-int64_t               dang_data_length;
-Headers               dang_headers;
-std::string           dang_uri;
+int64_t dang_data_length;
+Headers dang_headers;
+std::string dang_uri;
 nghttp2_priority_spec dang_pri_spec;
 double curr_thrp = 0;
 int dang_curr_request = 15;
@@ -574,30 +622,33 @@ const int num_of_tile = 6;
 // bool need_sort=true;
 // int need_request=0;
 //-------------------------------------------------------
-vector<int> dang_rate_set_orginal = {800, 1000, 2000 ,3000 ,4000 ,6000 ,8000 ,10000};
-//vector<int> dang_rate_set_orginal = {877 ,1195 ,1771 ,2381 ,3152 ,4410 ,10085 ,10583 ,17926};
-// vector<int> dang_rate_set={20,30,60,80,110,150,220,300,390,550,1260,1320,2240};
-//int weight[num_of_tile]={-1,-1,-1,-1,-1,-1,-1,-1};
-// int choose_rate[num_of_tile]; 
-//double square[num_of_tile]={0,0,0,0,12,20,38,30};
- // double sorted_square[num_of_tile];
-  // int tile_index[num_of_tile];
+vector<int> dang_rate_set_orginal = {800,  1000, 2000, 3000,
+                                     4000, 6000, 8000, 10000};
+int NO_VER = dang_rate_set_orginal.size();
+// vector<int> dang_rate_set_orginal = {877 ,1195 ,1771 ,2381 ,3152 ,4410 ,10085
+// ,10583 ,17926};
+// vector<int>
+// dang_rate_set={20,30,60,80,110,150,220,300,390,550,1260,1320,2240};
+// int weight[num_of_tile]={-1,-1,-1,-1,-1,-1,-1,-1};
+// int choose_rate[num_of_tile];
+// double square[num_of_tile]={0,0,0,0,12,20,38,30};
+// double sorted_square[num_of_tile];
+// int tile_index[num_of_tile];
 vector<double> dang_thrp[num_of_tile];
 vector<double> dang_bitrate[num_of_tile];
 
-
-int dang_last_segment=0;
+int dang_last_segment = 0;
 // int dang_last_time=0;
 
 // int dang_last_adapt_time=0;
-double total_size_segment=0;
-int dang_first_response=0;
-int no_of_push_in_segment=0;
-int rate_continuous=0;
-int tile_in_segment=6;
-int count_tile=0;
-double dang_inst_thrp=0;
-double dang_temp_thrp=0;
+double total_size_segment = 0;
+int dang_first_response = 0;
+int no_of_push_in_segment = 0;
+int rate_continuous = 0;
+int tile_in_segment = 6;
+int count_tile = 0;
+double dang_inst_thrp = 0;
+double dang_temp_thrp = 0;
 int start_measure_thrp;
 int end_measure_thrp;
 double total_data = 0;
@@ -605,20 +656,23 @@ int total_time = 0;
 int hung_time_unit = 50;
 ev_timer tev, dang_tev, delay_tev;
 bool dang_connected = false;
-bool dang_rst=false;
+bool dang_rst = false;
 const int initial_segment = 1;
-//int dang_tile_buffer=(initial_segment-1)*64;
+// int dang_tile_buffer=(initial_segment-1)*64;
 // std::vector<int> dang_tile_buffer_record;
 std::vector<double> dang_thrp_record2;
-//const string first_tiles="20_21_28_29_36_37_44_45_3_4_5_6_11_12_13_14_19_22_27_30_35_38_43_46_51_52_53_54_59_60_61_62";
-// const string first_tiles = "1_2_3_4_5_6_7_8_9_10_11_12_13_14_15_16_17_18_19_20_21_22_23_24";
+// const string
+// first_tiles="20_21_28_29_36_37_44_45_3_4_5_6_11_12_13_14_19_22_27_30_35_38_43_46_51_52_53_54_59_60_61_62";
+// const string first_tiles =
+// "1_2_3_4_5_6_7_8_9_10_11_12_13_14_15_16_17_18_19_20_21_22_23_24";
 
-//const string first_tiles="1_2_3_4_5_6_7_8_9_10_11_12_13_14_15_16_17_18_19_20_21_22_23_24_25_26_27_28_29_30_31_32_33_34_35_36_37_38_39_40_41_42_43_44_45_46_47_48_49_50_51_52_53_54_55_56_57_58_59_60_61_62_63_64";
+// const string
+// first_tiles="1_2_3_4_5_6_7_8_9_10_11_12_13_14_15_16_17_18_19_20_21_22_23_24_25_26_27_28_29_30_31_32_33_34_35_36_37_38_39_40_41_42_43_44_45_46_47_48_49_50_51_52_53_54_55_56_57_58_59_60_61_62_63_64";
 string rate_string;
 
-bool canceled=false;
-int curr_segment = 1;
-int seg_terminate=-1;
+bool canceled = false;
+int curr_segment = 0;
+int seg_terminate = -1;
 int no_request = 1;
 
 int played = 1 - initial_segment;
@@ -631,25 +685,22 @@ ofstream buffering_file;
 // ofstream buffer_detail;
 // ofstream cnt_tile, data_summary;
 ofstream GOP_buffer_file;
-bool decide_cancel=false ;
-int data_playout = 0 ;
-double total_rate_request  ;
-double total_rate_downloaded ;
+bool decide_cancel = false;
+int data_playout = 0;
+double total_rate_request;
+double total_rate_downloaded;
 vector<double> dang_segment_rate;
- //int rate1 = 3152, rate2 = 2381 ;
-int dang_face_rate [num_of_tile] = {3000, 2000, 2000, 2000, 2000, 800};
+// int rate1 = 3152, rate2 = 2381 ;
+int dang_face_rate[num_of_tile] = {3000, 2000, 2000, 2000, 2000, 800};
 bool dang_buffering2 = false;
 
-
-
-
-vector <int> region3 ;
+vector<int> region3;
 std::vector<int> region1 = {0};
 std::vector<int> region2 = {1, 2, 3, 4};
-int region[num_of_tile+1];
+int region[num_of_tile + 1];
 int dang_K = num_of_tile;
 int last_K = dang_K;
-//int total_time_rebuff = 0;
+// int total_time_rebuff = 0;
 const int num_of_region = 3;
 // bool finish_request [num_of_region + 1];
 int last_region = 6;
@@ -657,8 +708,8 @@ int last_region = 6;
 
 // int num_region_request = 3;
 int cnt_face = 0;
-//vector<int> region [num_of_region + 1];
-//int num_of_tile=64;
+// vector<int> region [num_of_region + 1];
+// int num_of_tile=64;
 // bool terminate = false;
 // int selected_rate[num_of_tile];
 int curr_request_stream_id = 23;
@@ -674,10 +725,10 @@ const int NO_REQUEST = 80;
 const int GOP_size = 5;
 const int frame_per_s = 30;
 
-double size_of_frame [num_of_tile];
-int frame_buffer [num_of_tile] = {0, 0, 0, 0, 0, 0};
-int face_stream_id [num_of_tile] ;
-double data_frame_compenstation [num_of_tile] = {0, 0, 0, 0, 0, 0};
+double size_of_frame[num_of_tile];
+int frame_buffer[num_of_tile] = {0, 0, 0, 0, 0, 0};
+int face_stream_id[num_of_tile];
+double data_frame_compenstation[num_of_tile] = {0, 0, 0, 0, 0, 0};
 
 bool start_timer = false;
 bool closed_connection = false;
@@ -687,14 +738,14 @@ int limited_dl_time = dang_sd;
 int last_limited_dl_time = dang_sd;
 int dang_download_time;
 bool repri_face[num_of_tile];
-bool cancel_face [num_of_tile];
+bool cancel_face[num_of_tile];
 bool back_face_last_come = false;
 bool is_face_0_finished = false;
-int size_of_seg ;
+int size_of_seg;
 // int size_of_face [num_of_tile];
 const int num_of_version = 8;
-int dang_size_file [num_of_tile][num_of_version];
-int dang_req_data_length [num_of_tile];
+int dang_size_file[num_of_tile][num_of_version];
+int dang_req_data_length[num_of_tile];
 bool late_send_request = false;
 bool finish_curr_seg = false;
 bool restart_timer = false;
@@ -703,7 +754,7 @@ int time_finish_request = 0;
 int max_timer, cnt_timer = 0;
 bool isFirstTime = true;
 const int initial_buffer = 30;
-//int stream_in_region [num_of_region];
+// int stream_in_region [num_of_region];
 //-------------------------------------------------------------------
 
 // Hung: get rate and seg# from the uri
@@ -715,91 +766,93 @@ const int initial_buffer = 30;
 //   int r = uri.find('_', l);
 //   return std::stoi(uri.substr(l, r-l));
 // }
-int getIndexByRate(int rate){
-  for(int i=0;i<dang_rate_set_orginal.size();i++){
-    if(rate==dang_rate_set_orginal.at(i))
+int getIndexByRate(int rate) {
+  for (int i = 0; i < dang_rate_set_orginal.size(); i++) {
+    if (rate == dang_rate_set_orginal.at(i))
       return i;
   }
   return -1;
 }
 
-void set_region (){
-  for(int i = 0 ;i< num_of_tile + 1 ; i++)
-    //if(region[i] != 1 && region[i] != 2)
-      region[i] = 3;
-  for(int i = 0 ; i < region1.size() ; i++)
+void set_region() {
+  for (int i = 0; i < num_of_tile + 1; i++)
+    // if(region[i] != 1 && region[i] != 2)
+    region[i] = 3;
+  for (int i = 0; i < region1.size(); i++)
     region[region1.at(i)] = 1;
-  for(int i = 0 ; i < region2.size() ; i++)
+  for (int i = 0; i < region2.size(); i++)
     region[region2.at(i)] = 2;
-  
-  for(int i = 1 ; i < num_of_tile + 1 ; i++)
-    if(region[i] == 3)
+
+  for (int i = 1; i < num_of_tile + 1; i++)
+    if (region[i] == 3)
       region3.push_back(i);
   // for(int i = 1 ; i<= num_of_tile ;i++)
   //  cout<<region[i]<<" ";
   // cout<<endl;
 }
 void init_setting() {
-  // total_rate_request = (rate1 + 4 * rate2 + dang_rate_set_orginal.at(0) )/ num_of_tile;
-  
-  
+  // total_rate_request = (rate1 + 4 * rate2 + dang_rate_set_orginal.at(0) )/
+  // num_of_tile;
+
   ifstream f;
   f.open("manifest.txt");
   for (int i = 0; i < num_of_tile; i++)
-    for (int j = 0; j < num_of_version; j++){
-      f >> dang_size_file [i][j];
+    for (int j = 0; j < num_of_version; j++) {
+      f >> dang_size_file[i][j];
       // cout << dang_size_file[i][j] << " ";
     }
   // size_of_frame [0] = (1000.0 * rate1  ) / (num_of_tile * frame_per_s * 8.0);
   // size_of_frame [1] = (1000.0 * rate2  ) / (num_of_tile * frame_per_s * 8.0);
-  // //size_of_frame [2] = (int)(1000.0 * dang_rate_set_orginal.at(0)) / (num_of_tile * 30 * 8.0);
-  // size_of_frame [2] = (1000.0 * dang_rate_set_orginal.at(0)  ) / (num_of_tile * frame_per_s * 8.0);
+  // //size_of_frame [2] = (int)(1000.0 * dang_rate_set_orginal.at(0)) /
+  // (num_of_tile * 30 * 8.0); size_of_frame [2] = (1000.0 *
+  // dang_rate_set_orginal.at(0)  ) / (num_of_tile * frame_per_s * 8.0);
   size_of_seg = 0;
-  for (int i = 0; i < num_of_tile; i++){
-    dang_req_data_length [i] = 0;
-    int version = getIndexByRate(dang_face_rate [i]);
-    size_of_seg += dang_size_file[i][version] * 8.0 ;
-    size_of_frame [i] = dang_size_file[i][version] * 1000.0 / (dang_sd * frame_per_s);
+  for (int i = 0; i < num_of_tile; i++) {
+    dang_req_data_length[i] = 0;
+    int version = getIndexByRate(dang_face_rate[i]);
+    size_of_seg += dang_size_file[i][version] * 8.0;
+    size_of_frame[i] =
+        dang_size_file[i][version] * 1000.0 / (dang_sd * frame_per_s);
     // cout << size_of_frame[i] << " ";
   }
 
-  total_rate_request = size_of_seg * 1.0 /  dang_sd;
+  total_rate_request = size_of_seg * 1.0 / dang_sd;
   // size_of_seg *= dang_sd / 1000.0;
-  //size_of_seg = total_rate_request * dang_sd;
+  // size_of_seg = total_rate_request * dang_sd;
   // for (int i = 0; i < num_of_tile; i++ )
   //  size_of_face [i] = 0;
 }
 
 void send_request_handle(struct ev_loop *loop, ev_timer *w, int revents);
 void display_timer_handle(struct ev_loop *loop, ev_timer *w, int revents);
-int dang_get_seg_from_uri (std::string uri) {
+int dang_get_seg_from_uri(std::string uri) {
   int l = uri.find('_') + 1;
   int r = uri.find('_', l);
-  return std::stoi(uri.substr(l, r-l));
+  return std::stoi(uri.substr(l, r - l));
 }
-int dang_get_face_from_uri (std::string uri) {
+int dang_get_face_from_uri(std::string uri) {
   return std::stoi(uri.substr(uri.rfind('_') + 1));
 }
-int dang_get_face_from_stream_id (int stream_id){
-  for (int i = 0; i < num_of_tile; i++){
-    if (face_stream_id [i] == stream_id)
+int dang_get_face_from_stream_id(int stream_id) {
+  for (int i = 0; i < num_of_tile; i++) {
+    if (face_stream_id[i] == stream_id)
       return i;
   }
 }
-int dang_get_rate_from_uri (std::string uri) {
+int dang_get_rate_from_uri(std::string uri) {
   int l;
   string sub = uri;
-  for(int i=0;i<3;i++){
-  l = sub.find('_') + 1;
- // cout<<l<<endl;
-  //int r = uri.find('_', l);=
-  sub = sub.substr(l);
-  //cout<<sub<<endl;
-}
+  for (int i = 0; i < 3; i++) {
+    l = sub.find('_') + 1;
+    // cout<<l<<endl;
+    // int r = uri.find('_', l);=
+    sub = sub.substr(l);
+    // cout<<sub<<endl;
+  }
   int r = sub.find("_");
-  //cout<<sub.find("_")<<endl;
+  // cout<<sub.find("_")<<endl;
   return std::stoi(sub.substr(0, r));
-  //return std::stoi(uri.substr(l, r-l));
+  // return std::stoi(uri.substr(l, r-l));
 }
 namespace {
 void readcb(struct ev_loop *loop, ev_io *w, int revents) {
@@ -812,7 +865,7 @@ void readcb(struct ev_loop *loop, ev_io *w, int revents) {
 
 namespace {
 void writecb(struct ev_loop *loop, ev_io *w, int revents) {
-  //cout<<"dcmm sao eo ra"<<endl;
+  // cout<<"dcmm sao eo ra"<<endl;
   auto client = static_cast<HttpClient *>(w->data);
   auto rv = client->do_write();
   if (rv == HttpClient::ERR_CONNECT_FAIL) {
@@ -862,32 +915,33 @@ HttpClient::HttpClient(const nghttp2_session_callbacks *callbacks,
       upgrade_response_status_code(0),
       fd(-1),
       upgrade_response_complete(false) {
-    ev_io_init(&wev, writecb, 0, EV_WRITE);
-    ev_io_init(&rev, readcb, 0, EV_READ);
-  
-    ev_timer_init(&tev,send_request_handle, 0, 1.0/1000);
-    ev_timer_start(loop,&tev);
+  ev_io_init(&wev, writecb, 0, EV_WRITE);
+  ev_io_init(&rev, readcb, 0, EV_READ);
 
+  ev_timer_init(&tev, send_request_handle, 0, 1.0 / 1000);
+  ev_timer_start(loop, &tev);
 
-    //play_file.open("/home/haidang/client/Output/play_file.txt");
-    // buffering_file.open("/home/haidang/client/Output/buffering.txt");
-    // //segment_nonenough.open("/home/haidang/client/Output/segment_nonenough.txt");
-    // //data_summary.open("/home/haidang/client/Output/data_summary.txt");
-    // //buffer_detail.open("/home/haidang/client/Output/buffer_detail.txt");
-    // buffering_file << "Segment\tTile\tTime Buffering" << endl;
-    //segment_nonenough << "Segment\tNum downloaded tile\tTile in region 1\tTile in region 2"<<endl;
-    //buffer_detail<<"Time playout\tRegion1\tRegion2\tRegion3\tUnsuable Tiles"<<endl;
-   // cnt_tile.open("/home/haidang/client/Output/cnt_tile.txt");
-    //cnt_tile<<"Segment\tNum of tile"<<endl;
-   // data_summary<<"Segment\tData downloaded\tData playout"<<endl;
-    GOP_buffer_file.open("/media/vanduc/Duc_fuji/HTTP2-SVC/Experiment/Dang-testbed-Duc/client/Output/GOP_buffer_file.txt");
-    GOP_buffer_file << "Time\t";
-    for (int i = 0; i < num_of_tile; i++)
-      GOP_buffer_file << "Face " << i << '\t';
-    GOP_buffer_file << endl;
-    set_region();
+  // play_file.open("/home/haidang/client/Output/play_file.txt");
+  // buffering_file.open("/home/haidang/client/Output/buffering.txt");
+  // //segment_nonenough.open("/home/haidang/client/Output/segment_nonenough.txt");
+  // //data_summary.open("/home/haidang/client/Output/data_summary.txt");
+  // //buffer_detail.open("/home/haidang/client/Output/buffer_detail.txt");
+  // buffering_file << "Segment\tTile\tTime Buffering" << endl;
+  // segment_nonenough << "Segment\tNum downloaded tile\tTile in region 1\tTile
+  // in region 2"<<endl; buffer_detail<<"Time
+  // playout\tRegion1\tRegion2\tRegion3\tUnsuable Tiles"<<endl;
+  // cnt_tile.open("/home/haidang/client/Output/cnt_tile.txt");
+  // cnt_tile<<"Segment\tNum of tile"<<endl;
+  // data_summary<<"Segment\tData downloaded\tData playout"<<endl;
+  GOP_buffer_file.open("/home/typhoon/Desktop/StreamPriority/test_priority/"
+                       "client/Output/GOP_buffer_file.txt");
+  GOP_buffer_file << "Time\t";
+  for (int i = 0; i < num_of_tile; i++)
+    GOP_buffer_file << "Face " << i << '\t';
+  GOP_buffer_file << endl;
+  set_region();
 
-    //cout<<"HttpClient"<<endl;
+  // cout<<"HttpClient"<<endl;
   wev.data = this;
   rev.data = this;
 
@@ -1008,10 +1062,10 @@ int HttpClient::initiate_connection() {
     on_readfn = &HttpClient::on_read;
     on_writefn = &HttpClient::on_write;
   }
-   //ev_timer_init(&tev, hung_tick_cb,0.,10.);
-   // tev.repeat = hung_time_unit / 1000.0;
-  //if(dang_connected)
-   //ev_timer_again(loop,&tev);
+  // ev_timer_init(&tev, hung_tick_cb,0.,10.);
+  // tev.repeat = hung_time_unit / 1000.0;
+  // if(dang_connected)
+  // ev_timer_again(loop,&tev);
   ev_io_set(&rev, fd, EV_READ);
   ev_io_set(&wev, fd, EV_WRITE);
 
@@ -1025,7 +1079,7 @@ int HttpClient::initiate_connection() {
 void HttpClient::disconnect() {
   cout << "Close connection" << endl;
   state = ClientState::IDLE;
-  //play_file.close();
+  // play_file.close();
   for (auto req = std::begin(reqvec); req != std::end(reqvec); ++req) {
     if ((*req)->continue_timer) {
       (*req)->continue_timer->stop();
@@ -1037,8 +1091,8 @@ void HttpClient::disconnect() {
 
   ev_timer_stop(loop, &rt);
   ev_timer_stop(loop, &wt);
-  ev_timer_stop(loop,&tev);
-  //ev_timer_stop(loop,&dang_tev);
+  ev_timer_stop(loop, &tev);
+  // ev_timer_stop(loop,&dang_tev);
   ev_io_stop(loop, &rev);
   ev_io_stop(loop, &wev);
 
@@ -1152,14 +1206,14 @@ int HttpClient::connected() {
   if (config.verbose) {
     print_timer();
     std::cout << " Connected" << std::endl;
-    dang_connected=true;
+    dang_connected = true;
   }
 
   state = ClientState::CONNECTED;
 
   ev_io_start(loop, &rev);
   ev_io_stop(loop, &wev);
-ev_timer_again(loop,&tev);
+  ev_timer_again(loop, &tev);
   ev_timer_again(loop, &rt);
   ev_timer_stop(loop, &wt);
 
@@ -1220,7 +1274,7 @@ size_t populate_settings(nghttp2_settings_entry *iv) {
     ++niv;
   }
   iv[niv].settings_id = NGHTTP2_SETTINGS_MAX_FRAME_SIZE;
-  iv[niv].value = 1<<20;
+  iv[niv].value = 1 << 20;
   ++niv;
   return niv;
 }
@@ -1321,7 +1375,7 @@ int HttpClient::on_upgrade_connect() {
 
 int HttpClient::on_upgrade_read(const uint8_t *data, size_t len) {
   int rv;
-  cout << "#[on_upgrade_read]" << endl;
+
   auto nread = http_parser_execute(htp.get(), &htp_hooks,
                                    reinterpret_cast<const char *>(data), len);
 
@@ -1513,12 +1567,11 @@ int HttpClient::connection_made() {
   // data
   for (auto i = std::begin(reqvec) + (need_upgrade() && !reqvec[0]->data_prd);
        i != std::end(reqvec); ++i) {
-    cout << "#[connection_made]" << endl;
     if (submit_request(this, config.headers, (*i).get()) != 0) {
       return -1;
     }
-  // Hung:
-  dang_headers = config.headers;
+    // Hung:
+    dang_headers = config.headers;
   }
 
   signal_write();
@@ -1731,9 +1784,9 @@ bool HttpClient::add_request(const std::string &uri,
   }
 
   // Hung_comment: Tam thoi bo cai check duplication nay di (no cache)
-//  if (path_cache.count(uri)) {
-//    return false;
-//  }
+  //  if (path_cache.count(uri)) {
+  //    return false;
+  //  }
 
   if (config.multiply == 1) {
     path_cache.insert(uri);
@@ -1939,7 +1992,6 @@ void HttpClient::output_har(FILE *outfile) {
 namespace {
 void update_html_parser(HttpClient *client, Request *req, const uint8_t *data,
                         size_t len, int fin) {
-  cout << "#[update_html_parser]" << endl;
   if (!req->html_parser) {
     return;
   }
@@ -1973,6 +2025,8 @@ HttpClient *get_client(void *user_data) {
 }
 } // namespace
 
+void trung_adaptation(HttpClient *client, nghttp2_session *session, int iter_id,
+                      double iter_down_elapsed_time);
 namespace {
 int on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
                                 int32_t stream_id, const uint8_t *data,
@@ -1985,8 +2039,6 @@ int on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
     return 0;
   }
 
-  
-
   if (config.verbose >= 2) {
     verbose_on_data_chunk_recv_callback(session, flags, stream_id, data, len,
                                         user_data);
@@ -1994,72 +2046,100 @@ int on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
 
   req->response_len += len;
 
-  
-     // cout << "Chunk len " << len << '\t' << stream_id << endl;
-  if (stream_id % 2 == 0) {
-      double Size_of_frame;
-      int face = dang_get_face_from_stream_id (stream_id);
-      // if (face == 0)
-      //   Size_of_frame = size_of_frame [0];
-      // else if (face == 5)
-      //   Size_of_frame = size_of_frame [2];
-      // else Size_of_frame = size_of_frame [1];
-      Size_of_frame = size_of_frame [face];
-     // cout << "Size_of_frame 2 " << len << '\t'<<frame_buffer[5]<< '\t' << data_frame_compenstation [5] << endl;
-      frame_buffer [face] += (int) (( len + data_frame_compenstation[face] ) / Size_of_frame );
-      data_frame_compenstation [face] = len + data_frame_compenstation[face] - (int)(( len + data_frame_compenstation[face] ) / Size_of_frame) * Size_of_frame;
-  }
-  if (frame_buffer [0] <= 15 && start_timer && is_face_0_finished && cancel_enable) {
-    
-    for (int i = 0; i < num_of_tile; i++){
+  //////////////////////////////////////////////////
+  int sid, fid, layerId, i, j;
+  double iter_down_elapsed_time;
+  bool STREAM_FIN_FLAG;
+  // /* update per tile downloaded data */
+  //   if(metric.RequestStreamInfo.find(stream_id) !=
+  //   metric.RequestStreamInfo.end()){
 
-      if (repri_face[i] && !cancel_face[i]) {
-        cout << "cancel r dmm" << endl;
-        nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
-                                  face_stream_id [i],
-                                NGHTTP2_CANCEL);
-        cancel_face [i] = true;
-      }
-    }
-  }
-  if (!start_timer) {
-    bool enable = true;
-    for (int i = 0; i < num_of_tile; i++ ) {
-      if (frame_buffer [i] < initial_buffer) {
-        enable = false;
-        break;
-        }
-    }
+  //     /* Determine segment/face ids */
+  //     sid = metric.RequestStreamInfo.find(stream_id)->second->sid;
+  //     fid = metric.RequestStreamInfo.find(stream_id)->second->fid;
+  //     layerId = metric.RequestStreamInfo.find(stream_id)->second->lid;
 
-    if (enable) {
-      struct ev_loop *loop = EV_DEFAULT;
-      ev_timer_init(&dang_tev, display_timer_handle, 0, GOP_size  / 30.0);
-      ev_timer_start (loop, &dang_tev);
-      if (!start_timer)
-        start_timer = true;
-      
-    }
-  }
-  else if (dang_buffering2) {
-    bool enable = true;
-    int temp = dang_K;
-    if (back_face_last_come) 
-      temp --;
-    for (int i = 0; i < temp; i++)
-      if (frame_buffer [i] < GOP_size){
-        enable = false;
-        break;
-      }
-    if (frame_buffer [0] >= GOP_size ) {
-      struct ev_loop *loop = EV_DEFAULT;
-      ev_timer_init(&dang_tev, display_timer_handle, 0, GOP_size  / 30.0);
-      ev_timer_start (loop, &dang_tev);
-      int curr_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                     get_time() - client->timing.connect_end_time).count(); 
-      total_time_rebuff = curr_time - start_time_rebuff;
-      dang_buffering2 = false;
-    }
-  }
+  //     /* updating downloaded data amount of each tile in kbits */
+  //     metric.face_dow_data[sid][fid][layerId] += len * 8.0/1000;
+  //     cout << "data[" << sid << "][" << fid << "][" << layerId << "]=" << len
+  //     * 8.0/1000 << endl;
+
+  //     /* measure elapsed time since the current iteration starts */
+  //     iter_down_elapsed_time =
+  //     std::chrono::duration_cast<std::chrono::milliseconds>(
+  //         get_time() - client->timing.connect_end_time).count() -
+  //         metric.iter_start_time[iter_id] ;
+
+  //     /* measure time elapsed since 'connect_end_time */
+  //     auto t_now = std::chrono::duration_cast<std::chrono::microseconds>(
+  //         get_time() - client->timing.connect_end_time).count()/1000.0;
+  //     cout << t_now << ", " << player.seg_playback_deadline[sid] << endl;
+
+  //     // if(meta.ALG == 2){
+  //     if(meta.ALG == 2 || meta.ALG == 3 || meta.ALG == 4 || meta.ALG == 5){
+  //       /* terminate late tile */
+  //   if (sid > 0 && fid > 0 && (t_now >= player.seg_playback_deadline[sid])){
+  //       cout << metric.face_stream_ID[sid][fid][layerId] << "," <<
+  //       metric.face_push_stream_id[sid][fid][layerId] << endl;
+  //         cout << "========== Cancelling stream " << stream_id << endl;
+  //         cancelled_request_stream.push_back(stream_id);
+  //         auto ret = nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
+  //         stream_id, NGHTTP2_CANCEL); cout << "ret=" << ret << endl;
+
+  //       // Find and canncel all active streams //
+  //     //   for(i=0; i < metric.iter_req_stream[iter_id].size(); i++){
+  //     //     STREAM_FIN_FLAG = false;
+  //     //     for(j=0; j < metric.iter_req_stream_fin[iter_id].size(); j++){
+  //     //       if(metric.iter_req_stream[iter_id][i] ==
+  //     metric.iter_req_stream_fin[iter_id][j]){
+  //     //         STREAM_FIN_FLAG = true;
+  //     //         break;
+  //     //       }
+  //     //     }
+  //     //     cout << "STREAM_FIN_FLAG: " << STREAM_FIN_FLAG << endl;
+  //     //     if(!STREAM_FIN_FLAG){
+  //     //     cout << "Cancelling stream #" <<
+  //     metric.iter_req_stream[iter_id][i] << endl;
+  //     //     sid =
+  //     metric.pushStreamInfo.find(metric.iter_req_stream[iter_id][i])->second->sid;
+  //     //         fid =
+  //     metric.pushStreamInfo.find(metric.iter_req_stream[iter_id][i])->second->fid;
+  //     //         layerId =
+  //     metric.pushStreamInfo.find(metric.iter_req_stream[iter_id][i])->second->lid;
+  //     //
+  //     cancelled_request_stream.push_back(metric.iter_req_stream[iter_id][i]);
+  //     //       auto ret = nghttp2_submit_rst_stream(session,
+  //     NGHTTP2_FLAG_NONE, metric.iter_req_stream[iter_id][i], NGHTTP2_CANCEL);
+  //     //       cout << "ret=" << ret << endl;
+  //     //     }
+  //     // }
+  //   }
+  // }
+
+  // // update tiles' layers
+  //     if(meta.ALG == 5){
+  //       if(fin_s_num != req_s_num && sid > 0 && fid > 0){
+  //         iter_down_elapsed_time =
+  //         std::chrono::duration_cast<std::chrono::milliseconds>(
+  //               get_time() - client->timing.connect_end_time).count() -
+  //               metric.iter_start_time[iter_id];
+  //         cout << "#[ALG5]: " << iter_down_elapsed_time << "," <<
+  //         metric.iter_down_time_budget[iter_id] << endl;
+  //         if(iter_down_elapsed_time >
+  //         0.5*metric.iter_down_time_budget[iter_id] &&
+  //         !metric.iter_re_decide[iter_id]){
+
+  //           /* involke only one time for each iteration */
+  //           metric.iter_re_decide[iter_id] = true;
+
+  //           /* trung's adaptation */
+  //           trung_adaptation(client, session, iter_id,
+  //           iter_down_elapsed_time);
+  //         }
+  //       }
+  //     }
+  //   }
+
   if (req->inflater) {
     while (len > 0) {
       const size_t MAX_OUTLEN = 4_k;
@@ -2082,7 +2162,6 @@ int on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
       data += tlen;
       len -= tlen;
     }
-
     return 0;
   }
 
@@ -2280,11 +2359,28 @@ int on_header_callback(nghttp2_session *session, const nghttp2_frame *frame,
 }
 } // namespace
 
+void Dang_adaptation_vr(HttpClient *client, int index);
+void UTD2017_adaptation_vr(HttpClient *client, int iter_id);
+void MMSP(HttpClient *client, int iter_id);
+int send_get_request(HttpClient *client, int index, int face, int br, int dep,
+                     int weight);
+void trung_adaptation(HttpClient *client, nghttp2_session *session, int iter_id,
+                      double iter_down_elapsed_time);
+
 namespace {
 int on_frame_recv_callback2(nghttp2_session *session,
                             const nghttp2_frame *frame, void *user_data) {
   int rv = 0;
-
+  int fid, sid, l, i, layerId, my_stream_id, j;
+  int *cur_vp_pos;                  /* current viewport postions */
+  vector<int> viewport_tile;        /* expected visible tiles */
+  vector<int> add_viewport_tile;    /* new visible tiles */
+  vector<int> remove_viewport_tile; /* old visible tiles --> terminate */
+  vector<int> cancel_stream;
+  double iter_down_elapsed_time;
+  double iter_down_remain_time;
+  nghttp2_stream *stream;
+  bool STREAM_FIN_FLAG;
   if (config.verbose) {
     verbose_on_frame_recv_callback(session, frame, user_data);
   }
@@ -2294,118 +2390,135 @@ int on_frame_recv_callback2(nghttp2_session *session,
   case NGHTTP2_DATA: {
     auto req = static_cast<Request *>(
         nghttp2_session_get_stream_user_data(session, frame->hd.stream_id));
+    // cout << "#########DEBUG: " << req << endl;
     if (!req) {
       return 0;
       ;
     }
-    if (frame -> hd.length > 0) {
-      
-      total_data += frame -> hd.length * 8.0/1000;
-      for (int i = 0; i < num_of_tile; i++){
-        cout << "Face " << i <<": "<<frame_buffer[i] <<" frames" << '\t';
-      }
-      int curr_face = dang_get_face_from_stream_id (frame -> hd.stream_id);
-      dang_req_data_length[curr_face] += frame -> hd.length ;
-      cout << endl;
-    }
-    int curr_download_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        get_time() - client->timing.connect_end_time).count() - start_measure_thrp ;
-    double curr_thrp = total_data / (curr_download_time / 1000.0);
-    cout << "Curr_thrp " << curr_thrp << endl;
-    // if(!is_sent_cancel) {
-    //   is_sent_cancel = true;
-    //    // nghttp2_priority_enable_spec_init(&dang_pri_spec, face_stream_id [0], 1,
-    //    //                           0);
-    //    //   nghttp2_submit_priority_enable(session, NGHTTP2_FLAG_NONE, face_stream_id [5] + 11,
-    //    //                             &dang_pri_spec);
-    // }
-    if ( total_data > 0.1 * total_rate_request * dang_sd / 1000 && repri_enable && frame -> hd.length > 0){
-     // is_sent_cancel = false;
-      //cout<<"Send cancel"<<endl;
-      cout << "TOtal rate request" << total_rate_request << endl;
-      int download_time_est = size_of_seg / curr_thrp ;
-      cout << "download_time_est " << download_time_est << " "<< size_of_seg << endl;
-      if (download_time_est > 0.9 * last_limited_dl_time ) {
-         // is_sent_cancel = true;
-        // nghttp2_submit_priority_enable(session, NGHTTP2_FLAG_NONE, face_stream_id [5],
-        //                              &dang_pri_spec)
-      if (!repri_face [5]) {
-            nghttp2_priority_spec_init(&dang_pri_spec, face_stream_id [0], 
-                      256 * dang_face_rate [5] / dang_face_rate [0], 0);
-            nghttp2_submit_priority(session, NGHTTP2_FLAG_NONE, face_stream_id [5],
-                                     &dang_pri_spec);
-          // nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
-          //                           face_stream_id [5],
-          //                         NGHTTP2_CANCEL);
-          repri_face[5] = true;
-          auto temp_req = static_cast<Request *>(
-            nghttp2_session_get_stream_user_data(session, face_stream_id [5]));
-          size_of_seg -= (dang_sd * dang_face_rate [5] / num_of_tile * 1.0 - dang_req_data_length [5] * 8) ;
-          cout << "test " << dang_sd * dang_face_rate [5] / num_of_tile * 1.0 << " " << dang_req_data_length [5] * 8 <<endl;
-          //size_of_seg -= dang_rate_set_orginal.at(0) * dang_sd * 
-          download_time_est = size_of_seg / (curr_thrp);
-          cout << "dang " << size_of_seg << " " << download_time_est <<endl;
-      }
-       // last_region --;
-        
-        int index;
-        while (download_time_est > 0.9 * last_limited_dl_time ) {
-          bool check = false;
-          for (int i = 1; i <= 4; i++) {
-            if (!repri_face [i]) 
-              check = true;
-          }
-          if (!check)
-            break;
-          srand((unsigned) time(0));
-          // while (repri_face [index])
-          do  {
-            index = rand() % 4 + 1;
-            if (!repri_face [index])
-              break;
-          }
-          while (true);
-      if (!repri_face [index]) {
-        nghttp2_priority_spec_init(&dang_pri_spec, face_stream_id [0], 
-                  256 * dang_face_rate [index] / dang_face_rate [0], 0);
-        auto temp_req = static_cast<Request *>(
-          nghttp2_session_get_stream_user_data(session, face_stream_id [index]));
-        size_of_seg -= (dang_sd * dang_face_rate [index] / num_of_tile * 1.0  - dang_req_data_length [index] * 8) ;
-        cout << "test " << dang_sd * dang_face_rate [index] / num_of_tile * 1.0 << " " << dang_req_data_length [index] * 8 <<endl;
-        //size_of_seg -= dang_rate_set_orginal.at(0) * dang_sd * 
-        download_time_est = size_of_seg / (curr_thrp);
-        //total_rate_request -= rate2 / num_of_tile * 1.0;
-        cout << "dang " << size_of_seg << " " << download_time_est <<endl;
-        // nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
-        //                        face_stream_id [index],
-        //                      NGHTTP2_CANCEL);
-        repri_face[index] = true;
-        nghttp2_submit_priority(session, NGHTTP2_FLAG_NONE, face_stream_id [index],
-                             &dang_pri_spec);
-           // nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
-           //                      face_stream_id [index + 1],
-           //                    NGHTTP2_CANCEL);
-       
-      }
-            index -- ;
-          //last_region --;
-        }
-        
-      }
-      // nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
-      //                           20,
-      //                           NGHTTP2_CANCEL);
-      // nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
-      //                           22,
-      //                           NGHTTP2_CANCEL);
-      // nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
-      //                           24,
-      //                           NGHTTP2_CANCEL);
-    }
-
     if (frame->hd.flags & NGHTTP2_FLAG_END_STREAM) {
       req->record_response_end_time();
       ++client->success;
+    }
+    //
+    if (frame->hd.length >= 0) {
+      /* update total download data */
+      metric.iter_down_data_frame[iter_id] +=
+          frame->hd.length * 8.0 / 1000; // kbit
+
+      /* update per tile downloaded data */
+      if (metric.RequestStreamInfo.find(frame->hd.stream_id) !=
+          metric.RequestStreamInfo.end()) {
+
+        /* Determine segment/face ids */
+        sid = metric.RequestStreamInfo.find(frame->hd.stream_id)->second->sid;
+        fid = metric.RequestStreamInfo.find(frame->hd.stream_id)->second->fid;
+        layerId =
+            metric.RequestStreamInfo.find(frame->hd.stream_id)->second->lid;
+
+        /* updating downloaded data amount of each tile in kbits */
+        metric.face_dow_data[sid][fid][layerId] +=
+            frame->hd.length * 8.0 / 1000;
+        // cout << "data[" << sid << "][" << fid << "][" << layerId << "]=" <<
+        // frame->hd.length * 8.0/1000 << endl;
+
+        /* measure elapsed time since the current iteration starts */
+        iter_down_elapsed_time =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                get_time() - client->timing.connect_end_time)
+                .count() -
+            metric.iter_start_time[iter_id];
+
+        /* measure time elapsed since 'connect_end_time */
+        auto t_now = std::chrono::duration_cast<std::chrono::microseconds>(
+                         get_time() - client->timing.connect_end_time)
+                         .count() /
+                     1000.0;
+        cout << t_now << ", " << player.seg_playback_deadline[sid] << endl;
+
+        // if(meta.ALG == 2){
+        if (meta.ALG == 2 || meta.ALG == 3 || meta.ALG == 4 || meta.ALG == 5 ||
+            meta.ALG == 6 || meta.ALG == 7 || meta.ALG == 8 || meta.ALG == 9 ||
+            meta.ALG == 10 || meta.ALG == 11 || meta.ALG == 12 ||
+            meta.ALG == 13) {
+          /* terminate late tile */
+          if (sid > 0 && fid > 0 &&
+              (t_now >= player.seg_playback_deadline[sid])) {
+            if (frame->hd.flags & NGHTTP2_FLAG_END_STREAM) {
+              req->record_response_end_time();
+              ++client->success;
+            } else {
+              // cout << "Cancelling stream " << frame->hd.stream_id << endl;
+              // cout << "Buffer size: " << player.get_cur_buff_size_second() <<
+              // endl; cancelled_request_stream.push_back(frame->hd.stream_id);
+              // auto ret = nghttp2_submit_rst_stream(session,
+              // NGHTTP2_FLAG_NONE, frame->hd.stream_id, NGHTTP2_CANCEL); cout
+              // << "ret=" << ret << endl;
+
+              // Find and canncel all active streams //
+              for (i = 0; i < metric.iter_req_stream[iter_id].size(); i++) {
+                if (std::find(metric.iter_req_stream_fin[iter_id].begin(),
+                              metric.iter_req_stream_fin[iter_id].end(),
+                              metric.iter_req_stream[iter_id][i]) ==
+                    metric.iter_req_stream_fin[iter_id].end()) {
+                  cout << "Cancelling stream "
+                       << metric.iter_req_stream[iter_id][i] << endl;
+                  cout << "Buffer size: " << player.get_cur_buff_size_second()
+                       << endl;
+                  cancelled_request_stream.push_back(
+                      metric.iter_req_stream[iter_id][i]);
+                  auto ret = nghttp2_submit_rst_stream(
+                      session, NGHTTP2_FLAG_NONE,
+                      metric.iter_req_stream[iter_id][i], NGHTTP2_CANCEL);
+                  cout << "ret=" << ret << endl;
+                }
+              }
+              //   cout << "STREAM_FIN_FLAG: " << STREAM_FIN_FLAG << endl;
+              //   if(!STREAM_FIN_FLAG){
+              //   cout << "Cancelling stream #" <<
+              //   metric.iter_req_stream[iter_id][i] << endl; sid =
+              //   metric.pushStreamInfo.find(metric.iter_req_stream[iter_id][i])->second->sid;
+              //       fid =
+              //       metric.pushStreamInfo.find(metric.iter_req_stream[iter_id][i])->second->fid;
+              //       layerId =
+              //       metric.pushStreamInfo.find(metric.iter_req_stream[iter_id][i])->second->lid;
+              //     cancelled_request_stream.push_back(metric.iter_req_stream[iter_id][i]);
+              //     auto ret = nghttp2_submit_rst_stream(session,
+              //     NGHTTP2_FLAG_NONE, metric.iter_req_stream[iter_id][i],
+              //     NGHTTP2_CANCEL); cout << "ret=" << ret << endl;
+              //   }
+              // }
+            }
+          }
+        }
+
+        // update tiles' layers
+        if (meta.ALG == 5 || meta.ALG == 6 || meta.ALG == 7 || meta.ALG == 8 ||
+            meta.ALG == 9 || meta.ALG == 10 || meta.ALG == 11 ||
+            meta.ALG == 12 || meta.ALG == 13) {
+          if (fin_s_num != req_s_num && sid > 0 && fid > 0) {
+            iter_down_elapsed_time =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    get_time() - client->timing.connect_end_time)
+                    .count() -
+                metric.iter_start_time[iter_id];
+            // cout << "#[ALG5]: " << iter_down_elapsed_time << "," <<
+            // metric.iter_down_time_budget[iter_id] << endl;
+            if (iter_down_elapsed_time >
+                    0.5 * metric.iter_down_time_budget[iter_id] &&
+                !metric.iter_re_decide[iter_id] &&
+                cancelled_request_stream.size() == 0) {
+
+              /* involke only one time for each iteration */
+              metric.iter_re_decide[iter_id] = true;
+
+              /* trung's adaptation */
+              trung_adaptation(client, session, iter_id,
+                               iter_down_elapsed_time);
+            }
+          }
+        }
+      }
+      // cout << endl;
     }
 
     break;
@@ -2417,18 +2530,21 @@ int on_frame_recv_callback2(nghttp2_session *session,
     // req is nullptr.
     if (!req) {
       return 0;
-      
     }
-    if(frame -> hd.stream_id % 2 == 0) {
-      //cout << req -> make_reqpath() << "\t" <<dang_get_face_from_uri (req -> make_reqpath())<<endl;
-      //face_stream_id 
-      face_stream_id [dang_get_face_from_uri (req -> make_reqpath())] = frame -> hd.stream_id;
-      if (dang_get_face_from_uri (req -> make_reqpath()) == 0) {
-        start_measure_thrp = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        req->timing.response_start_time - client->timing.connect_end_time).count();
-        cout << "Start measure time " << start_measure_thrp << endl;
-      }
-    }
+    // if(frame -> hd.stream_id % 2 == 0) {
+    //   //cout << req -> make_reqpath() << "\t" <<dang_get_face_from_uri (req
+    //   -> make_reqpath())<<endl;
+    //   //face_stream_id
+    //   face_stream_id [dang_get_face_from_uri (req -> make_reqpath())] = frame
+    //   -> hd.stream_id; if (dang_get_face_from_uri (req -> make_reqpath()) ==
+    //   0) {
+    //     start_measure_thrp =
+    //     std::chrono::duration_cast<std::chrono::milliseconds>(
+    //                     req->timing.response_start_time -
+    //                     client->timing.connect_end_time).count();
+    //     cout << "Start measure time " << start_measure_thrp << endl;
+    //   }
+    // }
     // if(dang_get_seg_from_uri(req->make_reqpath())==seg_terminate)
     //   decide_cancel=true;
     // else decide_cancel =false;
@@ -2436,7 +2552,7 @@ int on_frame_recv_callback2(nghttp2_session *session,
     case NGHTTP2_HCAT_RESPONSE:
     case NGHTTP2_HCAT_PUSH_RESPONSE:
       check_response_header(session, req);
-      //cout << "abc"<<endl;
+      // cout << "abc"<<endl;
       break;
     case NGHTTP2_HCAT_HEADERS:
       if (req->expect_final_response) {
@@ -2446,7 +2562,7 @@ int on_frame_recv_callback2(nghttp2_session *session,
       if ((frame->hd.flags & NGHTTP2_FLAG_END_STREAM) == 0) {
         nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
                                   frame->hd.stream_id, NGHTTP2_PROTOCOL_ERROR);
-        cout<<"dcm0";
+        cout << "dcm0";
         return 0;
       }
       break;
@@ -2473,9 +2589,53 @@ int on_frame_recv_callback2(nghttp2_session *session,
     if (!req) {
       break;
     }
-    // cout << frame->push_promise.promised_stream_id << '\t' << face_stream_id [0] <<endl;
-    // if (frame->push_promise.promised_stream_id == face_stream_id[0]) {
-      
+    /* determine push_stream of each request */
+    int stream_id, sid, fid, layerId;
+    StreamInfo *streamInfo;
+    // stream_id = frame->push_promise.hd.stream_id;
+    // if(metric.stream_id_2_sid.find(stream_id) !=
+    // metric.stream_id_2_sid.end()){
+    //   sid = metric.stream_id_2_sid.find(stream_id)->second;
+    //   fid = metric.stream_id_2_fid.find(stream_id)->second;
+    //   layerId = metric.stream_id_2_lid.find(stream_id)->second;
+    //   metric.face_push_stream_id[sid][fid][layerId] =
+    //   frame->push_promise.promised_stream_id;
+    //   metric.push_stream_id_2_sid.insert(std::pair<int, int>
+    //   (metric.face_push_stream_id[sid][fid][layerId], sid));
+    //   metric.push_stream_id_2_fid.insert(std::pair<int, int>
+    //   (metric.face_push_stream_id[sid][fid][layerId], fid));
+    //   metric.push_stream_id_2_lid.insert(std::pair<int, int>
+    //   (metric.face_push_stream_id[sid][fid][layerId], layerId));
+    // }
+    stream_id = frame->push_promise.hd.stream_id;
+    if (metric.RequestStreamInfo.find(stream_id) !=
+        metric.RequestStreamInfo.end()) {
+      sid = metric.RequestStreamInfo.find(stream_id)->second->sid;
+      fid = metric.RequestStreamInfo.find(stream_id)->second->fid;
+      layerId = metric.RequestStreamInfo.find(stream_id)->second->lid;
+
+      streamInfo = new StreamInfo(sid, fid, layerId);
+
+      metric.iter_push_stream[iter_id].push_back(
+          frame->push_promise.promised_stream_id);
+      metric.face_push_stream_id[sid][fid][layerId] =
+          frame->push_promise.promised_stream_id;
+      metric.pushStreamInfo.insert(std::pair<int, StreamInfo *>(
+          metric.face_push_stream_id[sid][fid][layerId], streamInfo));
+
+      metric.push_stream_id_2_sid.insert(std::pair<int, int>(
+          metric.face_push_stream_id[sid][fid][layerId], sid));
+      metric.push_stream_id_2_fid.insert(std::pair<int, int>(
+          metric.face_push_stream_id[sid][fid][layerId], fid));
+      metric.push_stream_id_2_lid.insert(std::pair<int, int>(
+          metric.face_push_stream_id[sid][fid][layerId], layerId));
+
+      metric.face_dow_data[sid][fid][layerId] = 0;
+    }
+    // cout << frame->push_promise.promised_stream_id << '\t' << face_stream_id
+    // [0] <<endl; if (frame->push_promise.promised_stream_id ==
+    // face_stream_id[0]) {
+
     // }
     req->header_buffer_size = 0;
 
@@ -2493,7 +2653,7 @@ int on_frame_recv_callback2(nghttp2_session *session,
       nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
                                 frame->push_promise.promised_stream_id,
                                 NGHTTP2_PROTOCOL_ERROR);
-      cout<<"dcm1";
+      cout << "dcm1";
       break;
     }
     std::string uri = scheme->value;
@@ -2505,7 +2665,7 @@ int on_frame_recv_callback2(nghttp2_session *session,
       nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
                                 frame->push_promise.promised_stream_id,
                                 NGHTTP2_PROTOCOL_ERROR);
-      cout<<"dcm2";
+      cout << "dcm2";
       break;
     }
     req->uri = uri;
@@ -2515,7 +2675,7 @@ int on_frame_recv_callback2(nghttp2_session *session,
       nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
                                 frame->push_promise.promised_stream_id,
                                 NGHTTP2_CANCEL);
-      cout<<"dcm3";
+      cout << "dcm3";
       break;
     }
 
@@ -2594,12 +2754,11 @@ int on_frame_not_send_callback(nghttp2_session *session,
   return 0;
 }
 } // namespace
-void Dang_adaptation_vr(HttpClient *client,int index);
 void send_request_handle(struct ev_loop *loop, ev_timer *w, int revents) {
-  // cout << "I am timer"<<endl;
+  // cout << "#[send_request_handle] "<<endl;
   if (isFirstTime) {
-    cnt_timer ++;
-    if (cnt_timer == 1000){
+    cnt_timer++;
+    if (cnt_timer == 1000) {
       cout << "Stop timer" << endl;
       ev_timer_stop(loop, &tev);
       isFirstTime = false;
@@ -2610,17 +2769,16 @@ void send_request_handle(struct ev_loop *loop, ev_timer *w, int revents) {
   }
   auto client = static_cast<HttpClient *>(ev_userdata(loop));
   int curr_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                     get_time() - client->timing.connect_end_time).count();
+                      get_time() - client->timing.connect_end_time)
+                      .count();
   // cout << "Curr time: " << curr_time / 1000.0 << endl;
-  cnt_timer ++;
+  cnt_timer++;
   if (cnt_timer == max_timer || frame_buffer[0] <= initial_buffer) {
     cnt_timer = 0;
-    Dang_adaptation_vr (client, 0);
+    // Dang_adaptation_vr (client, 0);
     cnt_face = 0;
     ev_timer_stop(loop, &tev);
   }
- 
-
 }
 
 // Hung: given the instant throughput, compute the maximum adapted bitrate
@@ -2629,307 +2787,2537 @@ void send_request_handle(struct ev_loop *loop, ev_timer *w, int revents) {
 //--------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------
 
-
-
 // Hung: rebufferring phase
-
-
 
 // Hung: change the bitrate without refusing the stream
 // Note that we disable adaptation until a new segment is fully received
 
 //-------------------------------------------------------------------------------
-int max_rate_less_than_thrp(double thrp){
-  //thrp = (1-safety_margin)*thrp;
-  
-    for(int i = dang_rate_set_orginal.size()-1;i>=0;i--){
-      if(dang_rate_set_orginal.at(i)<=thrp)
-        return dang_rate_set_orginal.at(i);
-    }
-    return dang_rate_set_orginal.at(0); 
-}
+int max_rate_less_than_thrp(double thrp) {
+  // thrp = (1-safety_margin)*thrp;
 
-
-
-void dang_req_vod_rate(HttpClient *client ,int tile,bool submit=true) {
-  curr_segment ++; // overall variable --> id of the current segment
-  int num1, num2, num3;
-  last_region = dang_K;
-  // int stream_id1, stream_id2;
-
-  // size_of_seg = 0;
-  std::cerr << "#[dang_req_vod_rate]" << endl;
-  // // cout<<"dang_K "<<dang_K<<" "<<num1<<" "<<num2<<" "<<num3<<endl;
-  for(int i = 0 ; i < dang_K ; i++){
-
-    curr_request_stream_id += 2;
-   
-    if (priority_enable) {
-      int weight;
-      if (i == 5 && back_face_last_come)
-        weight = 1;
-      else if (i == 0)
-        weight = 256;
-      else 
-        weight = 256 * dang_face_rate [i] / dang_face_rate [0];
-      nghttp2_priority_spec_init(&dang_pri_spec, 11, weight, 0);
-      // if (i == 5 && back_face_last_come)
-      //  nghttp2_priority_enable_spec_init(&dang_pri_spec, 11, 1, 0);
-      
-    }
-    rate_string = to_string (dang_face_rate [i]);
-    if (client->add_request(dang_uri+"/face"+to_string(i)+"/bitrate="+rate_string+"/num=1", 
-                            dang_data_prd, dang_data_length, dang_pri_spec)) {
-
-
-    if(submit)
-      submit_request(client, dang_headers, client->reqvec.back().get()); 
-    }
-    for (int i = 0; i < num_of_tile; i++)
-    data_frame_compenstation [i]= 0;
-
-    std::cout << "[ADAPTATION] bitrate for face "<< i << " rate : " << rate_string 
-                          << std::endl << std::endl;  
-
+  for (int i = dang_rate_set_orginal.size() - 1; i >= 0; i--) {
+    if (dang_rate_set_orginal.at(i) <= thrp)
+      return dang_rate_set_orginal.at(i);
   }
-  is_sent_cancel = false;
-  is_face_0_finished = false;
-  time_start_send_request = std::chrono::duration_cast<std::chrono::milliseconds>(
-                     get_time() - client->timing.connect_end_time).count();
-  finish_curr_seg = false;
-  late_send_request = false;
-  client->signal_write();
-  
+  return dang_rate_set_orginal.at(0);
 }
+
+// void dang_req_vod_rate(HttpClient *client ,int index, bool submit=true) {
+//   int num1, num2, num3;
+//   int weight, ver_id;
+//   last_region = dang_K;
+//   int fid;
+//   int RATE_ALOC_ALG = 2;
+//   double totalBR, usedBR;
+//   switch(RATE_ALOC_ALG){
+//     case 1:
+//       for(fid= 0 ; fid < dang_K ; fid++){
+
+//         /* get request id of each stream */
+//         curr_request_stream_id += 2;
+
+//         /* assign weight */
+//         weight = 20;
+//         nghttp2_priority_spec_init(&dang_pri_spec, 11, weight, 0);
+
+//         /* assign bitrate */
+//         dang_face_rate[fid] = dang_rate_set_orginal[0];
+//         rate_string = to_string (dang_face_rate [fid]);
+//         if
+//         (client->add_request(dang_uri+"/face"+to_string(fid)+"/bitrate="+rate_string+"/num=1",
+//               dang_data_prd, dang_data_length, dang_pri_spec)) {
+
+//           /* send request */
+//           if(submit)
+//             submit_request(client, dang_headers,
+//             client->reqvec.back().get());
+//         }
+//         for (int i = 0; i < num_of_tile; i++)
+//           data_frame_compenstation [i]= 0;
+
+//         /* record */
+//         // metric.face_stream_ID[index][fid] = curr_request_stream_id;
+//         // metric.face_br[index][fid] = dang_face_rate[fid];
+//         // metric.face_ini_weight[index][fid] = weight;
+//         //
+//         metric.stream_id_2_sid.insert(std::pair<int,int>(curr_request_stream_id,
+//         index));
+//         //
+//         metric.stream_id_2_fid.insert(std::pair<int,int>(curr_request_stream_id,
+//         fid));
+
+//         std::cout << "[ADAPTATION] bitrate for face "<< fid << " rate : " <<
+//         rate_string
+//           << std::endl << std::endl;
+//       }
+//       break;
+//     case 2:
+//       /* select bitrate */
+//       totalBR = 0;
+//       usedBR = 0;
+
+//       /* select the lowest bitrate for all faces */
+//       for(fid=0; fid < meta.NO_FACE; fid ++){
+//         // metric.face_br[index][fid] = dang_rate_set_orginal[0];
+//         usedBR += dang_rate_set_orginal[0];
+//       }
+//       cout << "UsedBR: " << usedBR << ", remain: " << (totalBR - usedBR) <<
+//       endl;
+
+//        select the highest possible bitrate for face 0
+//       if(usedBR < totalBR){
+//         for(ver_id = 1; ver_id < NO_VER; ver_id ++){
+//           cout << "ver: " << ver_id << ", " << dang_rate_set_orginal[ver_id]
+//           << endl; if(dang_rate_set_orginal[ver_id] -
+//           dang_rate_set_orginal[0] > (totalBR - usedBR))
+//             break;
+//         }
+//         if(ver_id > 1){
+//           // usedBR += (dang_rate_set_orginal[ver_id-1] -
+//           metric.face_br[index][0]);
+//           // metric.face_br[index][0] = dang_rate_set_orginal[ver_id - 1];
+//         }
+//       }
+
+//       /* select the highest possible bitrate for other faces */
+
+//       /* Assign tiles' priorities proportional to faces' bitrates */
+//       for(fid=0; fid < meta.NO_FACE; fid++){
+//         metric.face_ini_weight[index][fid] = (int) (120 *
+//         metric.face_br[index][fid] * 1.0 / usedBR); cout << "fid: " << fid <<
+//         ", " << metric.face_br[index][fid] << ", " <<
+//         metric.face_ini_weight[index][fid] << endl; curr_request_stream_id +=
+//         2;
+//         // metric.face_stream_ID[index][fid] = curr_request_stream_id;
+//         //
+//         metric.stream_id_2_sid.insert(std::pair<int,int>(curr_request_stream_id,
+//         index));
+//         //
+//         metric.stream_id_2_fid.insert(std::pair<int,int>(curr_request_stream_id,
+//         fid));
+
+//         /* create request */
+//         nghttp2_priority_spec_init(&dang_pri_spec, 11,
+//         metric.face_ini_weight[index][fid], 0); if
+//         (client->add_request(dang_uri+"/face"+to_string(fid)+"/bitrate="+to_string(metric.face_br[index][fid])+"/num=1",
+//         dang_data_prd, dang_data_length, dang_pri_spec)) {
+//             /* send request */
+//             if(submit)
+//               submit_request(client, dang_headers,
+//               client->reqvec.back().get());
+//         }
+//       }
+//       break;
+//   }
+//   is_sent_cancel = false;
+//   is_face_0_finished = false;
+//   time_start_send_request =
+//   std::chrono::duration_cast<std::chrono::milliseconds>(
+//                      get_time() - client->timing.connect_end_time).count();
+//   finish_curr_seg = false;
+//   late_send_request = false;
+//   client->signal_write();
+
+// }
 
 void dang_change_rate(HttpClient *client, int new_rate, int video) {
   // if(dang_adapted_rate [video-1]== new_rate) return;
   // else dang_adapted_rate[video-1] = new_rate;
 
-  cout << "#[dang_change_rate]" << endl;
-
   std::string rate_string = std::to_string(new_rate);
 
-  if (client->add_request(dang_uri+"/change"+to_string(video)+"/"+rate_string, dang_data_prd, dang_data_length, dang_pri_spec)) {
+  if (client->add_request(dang_uri + "/change" + to_string(video) + "/" +
+                              rate_string,
+                          dang_data_prd, dang_data_length, dang_pri_spec)) {
     submit_request(client, dang_headers, client->reqvec.back().get());
   }
 
-  std::cout << "[ADAPTATION] bitrate " << rate_string <<" of tile "<<video
-                            << std::endl << std::endl;  
+  std::cout << "[ADAPTATION] bitrate " << rate_string << " of tile " << video
+            << std::endl
+            << std::endl;
 
   client->signal_write();
 }
-void display_timer_handle (struct ev_loop *loop, ev_timer *w, int revents) {
+void display_timer_handle(struct ev_loop *loop, ev_timer *w, int revents) {
   auto client = static_cast<HttpClient *>(ev_userdata(loop));
-  cout << "Decoded [ " << std::chrono::duration_cast<std::chrono::milliseconds>(
-                     get_time() - client->timing.connect_end_time).count() << "]";
-  for (int i = 0; i < num_of_tile; i++){
-   cout << " Face " << i << ": " << frame_buffer [i] << " frames" << '\t';
+  cout << "Decoded [ "
+       << std::chrono::duration_cast<std::chrono::milliseconds>(
+              get_time() - client->timing.connect_end_time)
+              .count()
+       << "]";
+  for (int i = 0; i < num_of_tile; i++) {
+    cout << " Face " << i << ": " << frame_buffer[i] << " frames" << '\t';
   }
   cout << endl;
   GOP_buffer_file << std::chrono::duration_cast<std::chrono::milliseconds>(
-                     get_time() - client->timing.connect_end_time).count() / 1000.0 << '\t';
-  for (int i = 0; i < num_of_tile; i++){
-    if(i >= dang_K && frame_buffer [i] <= 0)
+                         get_time() - client->timing.connect_end_time)
+                             .count() /
+                         1000.0
+                  << '\t';
+  for (int i = 0; i < num_of_tile; i++) {
+    if (i >= dang_K && frame_buffer[i] <= 0)
       GOP_buffer_file << "x" << '\t';
-      
+
     else {
-      if (frame_buffer [i] < 0)
+      if (frame_buffer[i] < 0)
         GOP_buffer_file << 0 << '\t';
       else
-        GOP_buffer_file << frame_buffer [i] / GOP_size<< '\t';
+        GOP_buffer_file << frame_buffer[i] / GOP_size << '\t';
     }
   }
   GOP_buffer_file << endl;
 
-  
-   bool stop_timer = false;
+  bool stop_timer = false;
   // for (int i = 0; i < frame_buffer [i] ; i ++) {
   //   if (frame_buffer [i] > 0)
   //     stop_timer = false;
   // }
-  if (frame_buffer [0] <= -100000) {
+  if (frame_buffer[0] <= -100000) {
     start_time_rebuff = std::chrono::duration_cast<std::chrono::milliseconds>(
-                     get_time() - client->timing.connect_end_time).count(); 
+                            get_time() - client->timing.connect_end_time)
+                            .count();
     dang_buffering2 = true;
     ev_timer_stop(loop, &dang_tev);
-  }
-  else {
-    for (int i = 0; i < num_of_tile; i++){
-      if (i < dang_K || (i >= dang_K && frame_buffer [i] > 0)) 
-          frame_buffer [i] -= GOP_size;
-    //else frame_buffer [i] = 0;
+  } else {
+    for (int i = 0; i < num_of_tile; i++) {
+      if (i < dang_K || (i >= dang_K && frame_buffer[i] > 0))
+        frame_buffer[i] -= GOP_size;
+      // else frame_buffer [i] = 0;
     }
   }
-  if (closed_connection){
+  if (closed_connection) {
     bool stop_timer = true;
-    for (int i = 0; i < num_of_tile; i++){
-      if (frame_buffer [i] > 0) 
+    for (int i = 0; i < num_of_tile; i++) {
+      if (frame_buffer[i] > 0)
         stop_timer = false;
-    //else frame_buffer [i] = 0;
+      // else frame_buffer [i] = 0;
     }
     if (stop_timer) {
-      ev_timer_stop(loop,&dang_tev);
+      ev_timer_stop(loop, &dang_tev);
       GOP_buffer_file.close();
     }
   }
-  
- 
-  
 }
-void setSmoothedBW(){
-   double sigma = 0.125;
-    if (dang_segment_rate.size() == 1){
-      smoothedBW = dang_inst_thrp;
-    }
-    else {
-      smoothedBW = dang_inst_thrp * sigma + smoothedBW * (1 - sigma);
-    }
+void setSmoothedBW() {
+  double sigma = 0.125;
+  if (dang_segment_rate.size() == 1) {
+    smoothedBW = dang_inst_thrp;
+  } else {
+    smoothedBW = dang_inst_thrp * sigma + smoothedBW * (1 - sigma);
+  }
+}
+int send_get_request(HttpClient *client, int index, int fid, int br, int dep,
+                     int w) {
+  /* assign  weight and  dependency to this stream */
+  nghttp2_priority_spec_init(&dang_pri_spec, dep, w, 0);
+
+  /* send request */
+  if (client->add_request(dang_uri + "/face" + to_string(fid) +
+                              "/bitrate=" + to_string(br) + "/num=1",
+                          dang_data_prd, dang_data_length, dang_pri_spec)) {
+
+    submit_request(client, dang_headers, client->reqvec.back().get());
+  }
+  cur_req_stream_id += 2;
+  return cur_req_stream_id;
 }
 
-void Dang_adaptation_vr(HttpClient *client, int index){
-  // for(int i = 0; i < num_of_tile; i++) {
-  //   selected_rate[i] = 0;
-  // }
+void trung_adaptation(HttpClient *client, nghttp2_session *session, int iter_id,
+                      double iter_down_elapsed_time) {
+  /* predictViewport */
+  vector<int> C;
+  vector<int> D;
+  vector<int> E;
+  vector<int> viewport_tile;
+  vector<int> viewport_tile_estimate;
+  int i, j, l, sid, fid, layerId, total_br_remain_stream = 0, EL_br_tmp = 0;
+  bool STREAM_FIN_FLAG;
+  StreamInfo *streamInfo;
 
-  // rate1 = 0;
-  // rate2 = 0;
-  for (int i = 0; i < num_of_tile; i++)
-    dang_face_rate [i] = dang_rate_set_orginal.at(0);
-  // if(curr_segment == played){
-  //   num_of_tile1 = 0;
-  //   num_of_tile2 = 0;
-  //   num_of_tile3 = 0;
-  // }
-  // if(terminate_session) {
-  //   //terminate_session = true;
-  //   cout << "Terminate session "<<endl;
-  //   //nghttp2_session_terminate_session2(client -> session, 0, NGHTTP2_NO_ERROR);
-  //   return;
-  // }
+  cout << "######### trung_adaptation ######" << endl;
+  cout << "######### iter_id = " << iter_id << "######" << endl;
+  cout << "Down. time budget: " << metric.iter_down_time_budget[iter_id]
+       << endl;
+  /* invoke only 1 time */
+  // metric.iter_re_decide[iter_id] = true;
 
-  last_K = dang_K;
-  no_request++;
-  if(no_request > NO_REQUEST)
-    return;
-  double avail_thrp ;
-  dang_thrp_record2.push_back(dang_inst_thrp);
-  setSmoothedBW();
-  int temp = dang_thrp_record2.size();
-  if (temp == 1) {
-    avail_thrp = dang_inst_thrp;
-    safety_margin = 0.1;
-    back_face_last_come = false;
+  /* predictViewport */
+  int *cur_vp_pos = player.htrace->get_vp_pos(player.get_cur_play_time());
+  viewport_tile = player.vmask->get_visible_tile(cur_vp_pos);
+
+  for (i = 0; i < viewport_tile.size(); i++) {
+    cout << viewport_tile[i] << ",";
+    if (!IsVectorElement(metric.iter_tile_list[iter_id], viewport_tile[i]))
+      E.push_back(viewport_tile[i]);
   }
-  else if (dang_thrp_record2.at(temp - 2) < dang_thrp_record2.at(temp - 1)) {
-    avail_thrp = smoothedBW;
-    // safety_margin = 0.1;
-    back_face_last_come = false;
-  }
-  else {
-    back_face_last_come = true;
-    avail_thrp = dang_inst_thrp;
-    // double ratio_thrp = 1 - dang_thrp_record2.at(temp - 1) * 1.0 / dang_thrp_record2.at(temp - 2);
-    // safety_margin = ratio_thrp > 0.1 ? ratio_thrp : 0.1;
-    cout << "Safety margin: " << safety_margin << endl;
-  }
+  cout << endl;
 
-  int curr_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                   get_time() - client->timing.connect_end_time).count();
+  for (i = 0; i < metric.iter_tile_list[iter_id].size(); i++) {
+    cout << metric.iter_tile_list[iter_id][i] << ",";
+    if (!IsVectorElement(viewport_tile, metric.iter_tile_list[iter_id][i]))
+      D.push_back(metric.iter_tile_list[iter_id][i]);
+  }
+  cout << endl;
 
-  limited_dl_time = (curr_segment + 1) * dang_sd + total_time_rebuff - curr_time;
-  cout<<"Current time : "<<curr_time<<endl;
-  cout<< "total_time_rebuff : "<< total_time_rebuff <<endl;
-  cout<<"Curr seg : "<<curr_segment<<endl;
-  
-  if (limited_dl_time > dang_sd)
-    limited_dl_time = dang_sd;
-  limited_dl_time = dang_sd;
-  // else if (limited_dl_time > 7000)
-  //  limited_dl_time = 7000;
-  last_limited_dl_time = limited_dl_time ;
-  // avail_thrp *= limited_dl_time *1.0 / dang_sd;
-  cout<<"limited_dl_time "<<limited_dl_time<<endl;
-  cout<<"avail_thrp "<<avail_thrp<<endl;
-    // if(dang_tile_buffer >= num_of_tile*(initial_segment)){
-     
-    //curr_segment++;
-     if(!dang_buffering){
-      for(int i = dang_rate_set_orginal.size() - 1 ; i >= 1 ; i --){
-        if(region1.size()*dang_rate_set_orginal.at(i)*1.0/num_of_tile + region2.size()*1.0*dang_rate_set_orginal.at(i-1)/num_of_tile 
-          + (num_of_tile - region1.size() - region2.size() ) *1.0 * dang_rate_set_orginal.at(0)/num_of_tile <= avail_thrp*(1 - safety_margin)){
-          dang_face_rate [0] = dang_rate_set_orginal.at(i);
-        for (int j = 1; j < 5; j++)
-            dang_face_rate [j] = dang_rate_set_orginal.at(i-1);
-          break;
+  /* find 'remove' visible tiles */
+  // set_difference(metric.iter_tile_list[iter_id].begin(),
+  // metric.iter_tile_list[iter_id].end(), viewport_tile.begin(),
+  // viewport_tile.end(), std::inserter(D, D.begin()));
+
+  /* find 'new' visible tiles */
+  // set_difference(viewport_tile.begin(), viewport_tile.end(),
+  // metric.iter_tile_list[iter_id].begin(),
+  // metric.iter_tile_list[iter_id].end(), std::inserter(E, E.begin()));
+
+  cout << "Old visible tiles: " << D.size() << endl;
+
+  for (i = 0; i < D.size(); i++)
+    cout << D[i] << ",";
+  cout << endl;
+
+  cout << "New visible tiles: " << E.size() << endl;
+  for (i = 0; i < E.size(); i++)
+    cout << E[i] << ",";
+  cout << endl;
+
+  /////////////////////////////////////////////////////////////////
+  ///// cancel active push streams of old visible tiles ///////////
+  /////////////////////////////////////////////////////////////////
+  if (E.size() > 0) {
+    cout << "============ iter_req_stream_num: "
+         << metric.iter_req_stream[iter_id].size() << endl;
+    for (i = 0; i < metric.iter_req_stream[iter_id].size(); i++) {
+      sid = metric.RequestStreamInfo.find(metric.iter_req_stream[iter_id][i])
+                ->second->sid;
+      fid = metric.RequestStreamInfo.find(metric.iter_req_stream[iter_id][i])
+                ->second->fid;
+      layerId =
+          metric.RequestStreamInfo.find(metric.iter_req_stream[iter_id][i])
+              ->second->lid;
+      cout << "============ " << metric.iter_req_stream[iter_id][i] << ","
+           << sid << "," << fid << "," << layerId << endl;
+      cout << "============ " << metric.iter_req_stream_fin[iter_id].size()
+           << endl;
+
+      if (std::find(metric.iter_req_stream_fin[iter_id].begin(),
+                    metric.iter_req_stream_fin[iter_id].end(),
+                    metric.iter_req_stream[iter_id][i]) !=
+          metric.iter_req_stream_fin[iter_id].end()) {
+        STREAM_FIN_FLAG = true;
+      } else {
+        STREAM_FIN_FLAG = false;
+      }
+      // for(j=0; j < metric.iter_req_stream_fin[iter_id].size(); j++){
+      //   cout << "============== " << metric.iter_req_stream_fin[iter_id][j]
+      //   << "," << metric.iter_req_stream[iter_id][i] << endl;
+      //   if(metric.iter_req_stream[iter_id][i] ==
+      //   metric.iter_push_stream_fin[iter_id][j]){
+      //     cout << "============= TRUE" << endl;
+      //     STREAM_FIN_FLAG = true;
+      //     break;
+      //   }
+      // }
+      cout << "STREAM_FIN_FLAG: " << STREAM_FIN_FLAG << ", sid=" << sid << ","
+           << fid << "," << layerId << endl;
+      if (!STREAM_FIN_FLAG) {
+        if (IsVectorElement(D, fid) &&
+            metric.face_dow_data[sid][fid][layerId] == 0) {
+          // cout << "Cancelling stream #" <<
+          // metric.iter_push_stream[iter_id][i] << ", sid=" << sid << "," <<
+          // fid << "," << layerId  << endl;
+          // cancelled_request_stream.push_back(metric.face_stream_ID[sid][fid][layerId]);
+          metric.face_ini_weight[sid][D[i]][layerId] = 30;
+          nghttp2_priority_spec_init(
+              &trung_pri_spec, metric.face_stream_ID[EL_seg_id][E[0]][layerId],
+              metric.face_ini_weight[EL_seg_id][D[i]][layerId], 0);
+          nghttp2_submit_priority(session, NGHTTP2_FLAG_NONE,
+                                  metric.face_stream_ID[sid][D[i]][layerId],
+                                  &trung_pri_spec);
+          // nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
+          // metric.iter_push_stream[iter_id][i], NGHTTP2_CANCEL);
+          // nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
+          // metric.face_stream_ID[sid][fid][layerId], NGHTTP2_CANCEL);
+          // total_br_remain_stream += meta.enha_layer_br[layerId];
         }
       }
-      
     }
-    // else {
-    //   rate1 = dang_rate_set_orginal.at(0);
-    //   rate2 = dang_rate_set_orginal.at(0);
-    // }
-  size_of_seg = 0;
-  for (int i = 0; i < num_of_tile; i++){
-    dang_req_data_length [i] = 0;
-    int version = getIndexByRate(dang_face_rate [i]);
-    size_of_seg += dang_size_file[i][version] * 8.0 ;
-    size_of_frame [i] = dang_size_file[i][version] * 1000.0 / (dang_sd * frame_per_s);
-    // cout << size_of_frame[i] << " ";
+  }
+  /////////////////////////////////////////////////////////////////
+  /// Decide versions and request EL of new visible tile ///////////
+  /////////////////////////////////////////////////////////////////
+
+  // find versions of new tiles
+  for (l = 0; l < meta.EL_VER_NUM; l++) {
+    if (((EL_br_tmp + meta.enha_layer_br[l]) * E.size() +
+         total_br_remain_stream) *
+            meta.SD >
+        metric.iter_est_thrp[iter_id] *
+            (metric.iter_down_time_budget[iter_id] - iter_down_elapsed_time) /
+            1000.0)
+      break;
+    EL_br_tmp += meta.enha_layer_br[l];
+  }
+  cout << "l=" << l << endl;
+
+  /* send get requests */
+  /*
+   */
+  if (l > 0) {
+    for (i = 0; i < E.size(); i++) {
+      for (layerId = 1; layerId <= l; layerId++) {
+
+        // assign bitrate and weights
+        metric.face_br[EL_seg_id][E[i]][layerId] =
+            meta.enha_layer_br[layerId - 1];
+        cout << meta.enha_layer_br[layerId] << endl;
+
+        metric.face_ini_weight[EL_seg_id][E[i]][layerId] = 10;
+
+        // send request
+        metric.face_stream_ID[EL_seg_id][E[i]][layerId] = send_get_request(
+            client, EL_seg_id, E[i], metric.face_br[EL_seg_id][E[i]][layerId],
+            0, metric.face_ini_weight[EL_seg_id][E[i]][layerId]);
+        metric.iter_req_stream[iter_id].push_back(
+            metric.face_stream_ID[EL_seg_id][E[i]][layerId]);
+
+        // map stream_id -> (index, faceId, layerId)
+        streamInfo = new StreamInfo(EL_seg_id, E[i], layerId);
+        metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+            metric.face_stream_ID[EL_seg_id][E[i]][layerId], streamInfo));
+        //
+        req_s_num++;
+        //
+        cout << "# Requesting new req_stream_id: "
+             << metric.face_stream_ID[EL_seg_id][E[i]][layerId] << ","
+             << metric.face_br[EL_seg_id][E[i]][layerId] << "," << E[i] << ","
+             << layerId << endl;
+      }
+      metric.iter_tile_list[iter_id].push_back(E[i]);
+    }
+  }
+};
+void MMSP(HttpClient *client, int iter_id) {
+  int l, i, layerId, j, k, ID;
+  int *cur_vp_pos;
+  int *tile_pixel;
+  int *tile_pixel_2;
+  vector<int> pri;
+  vector<int> viewport_tile, adj_viewport_tile;
+  double EL_br_tmp = 0;
+  int sum_tile_br;
+  StreamInfo *streamInfo;
+  int max_temp, min_temp;
+
+  // cout << "#[MMSP]: iter_id="  << iter_id << "," << (player.playing_seg_id +
+  // 1) << endl;
+  metric.iter_start_time[iter_id] =
+      std::chrono::duration_cast<std::chrono::microseconds>(
+          get_time() - client->timing.connect_end_time)
+          .count() /
+      1000.0;
+
+  /* reset cancelled stream */
+  cancelled_request_stream.clear();
+
+  /* estimate available bandwidth for this iteration */
+  metric.est_iter_thrp(iter_id);
+  if (meta.ALG == 11)
+    metric.cal_smooth_bitrate(iter_id, 500);
+  else
+    metric.cal_smooth_bitrate(iter_id, 200);
+
+  cout << "#[MMSP]: iter_id=" << iter_id << "," << (player.playing_seg_id + 1)
+       << "est_thrp=" << metric.iter_est_thrp[iter_id] << ","
+       << player.get_cur_buff_size_second()
+       << ",LAST_ITER_MASK: " << LAST_ITER_MASK << endl;
+  req_s_num = 0;
+
+  // set buffering mode
+  if (player.get_cur_buff_size_second() >= meta.BASE_BUFF_THRES &&
+      INI_BUFFERING) {
+    INI_BUFFERING = false;
+    cout << "=========MMSP initial buffering finsihed" << endl;
   }
 
-  total_rate_request = size_of_seg * 1.0 / dang_sd;
+  if (player.get_cur_buff_size_second() < meta.BASE_BUFF_THRES / 2 &&
+      !RE_BUFFERRING && !INI_BUFFERING) {
+    RE_BUFFERRING = true;
+  }
 
-      dang_req_vod_rate(client, index);
-      for (int i = 0; i < num_of_tile; i++){
-        if(frame_buffer[i] < 0)
-          frame_buffer [i] = 0;
-        if(repri_face[i])
-          repri_face[i] = false;
-        if (cancel_face [i])
-          cancel_face[i] = false;
-        //size_of_face [i] = 0;
+  if (player.get_cur_buff_size_second() >= meta.BASE_BUFF_THRES &&
+      !INI_BUFFERING && RE_BUFFERRING) {
+    RE_BUFFERRING = false;
+  }
+
+  if (BL_seg_id < meta.NO_SEG) {
+
+    // if ((INI_BUFFERING &&
+    //      player.get_cur_buff_size_second() < (meta.BASE_BUFF_THRES)) ||
+    //     (!INI_BUFFERING && !RE_BUFFERRING &&
+    //      player.get_cur_buff_size_second() < (meta.BASE_BUFF_THRES) &&
+    //      LAST_ITER_MASK == 1) ||
+    //     (!INI_BUFFERING && RE_BUFFERRING)) {
+
+    if ((INI_BUFFERING &&
+         player.get_cur_buff_size_second() < (meta.BASE_BUFF_THRES * 15)) ||
+        (!INI_BUFFERING && !RE_BUFFERRING &&
+         player.get_cur_buff_size_second() < (meta.BASE_BUFF_THRES * 15) &&
+         LAST_ITER_MASK == 1) ||
+        (!INI_BUFFERING && RE_BUFFERRING)) {
+      // if((INI_BUFFERING && player.get_cur_buff_size_second() <
+      // meta.BASE_BUFF_THRES) || (!INI_BUFFERING &&
+      // player.get_cur_buff_size_second() < meta.BASE_BUFF_THRES - 1)){
+      /* next base layer segment ID */
+      metric.iter_tile_version[iter_id] = 0;
+      metric.iter_down_time_budget[iter_id] =
+          player.seg_playback_deadline[BL_seg_id] -
+          (std::chrono::duration_cast<std::chrono::microseconds>(
+               std::chrono::steady_clock::now() -
+               client->timing.connect_end_time)
+               .count() /
+           1000.0);
+
+      /* Download base layer of the current segment */
+      metric.face_br[BL_seg_id][0][0] = meta.base_layer_br;
+      metric.face_ini_weight[BL_seg_id][0][0] = 20;
+
+      /* send request */
+      metric.face_stream_ID[BL_seg_id][0][0] = send_get_request(
+          client, BL_seg_id, 0, metric.face_br[BL_seg_id][0][0], 0,
+          metric.face_ini_weight[BL_seg_id][0][0]);
+      cout << "#[MMSP] req_stream_id: "
+           << metric.face_stream_ID[BL_seg_id][0][0] << "," << BL_seg_id
+           << endl;
+
+      /* map stream_id -> (index, faceid) */
+      streamInfo = new StreamInfo(BL_seg_id, 0, 0);
+      metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+          metric.face_stream_ID[BL_seg_id][0][0], streamInfo));
+      metric.iter_req_stream[iter_id].push_back(
+          metric.face_stream_ID[BL_seg_id][0][0]);
+
+      /* update status */
+      req_s_num = 1;
+      fin_s_num = 0;
+
+      LAST_ITER_MASK = 0;
+    }
+  }
+  if (req_s_num == 0) {
+    /* decide and request EL layer chunks of tiles of next played segment */
+    if (player.playing_seg_id == meta.NO_SEG - 1) {
+      return;
+    }
+
+    /* headNext(): get next playing segment */
+    EL_seg_id = player.playing_seg_id + 1;
+    // if(!metric.seg_EL_download[EL_seg_id] && BL_seg_id < meta.NO_SEG){
+    if (!metric.seg_EL_download[EL_seg_id] && EL_seg_id < meta.NO_SEG) {
+
+      LAST_ITER_MASK = 1;
+      /* predictViewport */
+      cur_vp_pos = player.htrace->get_vp_pos(player.get_cur_play_time());
+
+      // known viewports first frame
+      // cur_vp_pos = player.htrace->get_vp_pos(EL_seg_id * player.SD);
+
+      // known viewports middle frame
+      // cur_vp_pos = player.htrace->get_vp_pos(EL_seg_id * player.SD +
+      // player.SD/2);
+
+      viewport_tile = player.vmask->get_visible_tile(cur_vp_pos);
+      // adj_viewport_tile = player.vmask->get_adjacent_tile(cur_vp_pos);
+      // cout << "##############Adjacent tiles:" << endl;
+      // for(int i=0; i < adj_viewport_tile.size(); i++)
+      // 	cout << adj_viewport_tile[i] << ",";
+      // cout << endl;
+
+      player.seg_est_vp[EL_seg_id] = cur_vp_pos;
+
+      // // known viewport #2: t0 + SD/2
+      // viewport_tile =
+      // player.vmask->get_visible_tile(player.htrace->get_vp_pos(EL_seg_id *
+      // player.SD + player.SD/2.0));
+
+      cout << "#[MMSP]: " << cur_vp_pos[0] << ", " << cur_vp_pos[1] << ", "
+           << player.get_cur_play_time() << endl;
+
+      if (meta.ALG == 4) {
+        metric.iter_down_time_budget[iter_id] =
+            player.seg_playback_deadline[EL_seg_id] -
+            (std::chrono::duration_cast<std::chrono::microseconds>(
+                 std::chrono::steady_clock::now() -
+                 client->timing.connect_end_time)
+                 .count() /
+             1000.0);
+        cout << "ALG4: " << metric.iter_down_time_budget[iter_id] << endl;
+        auto start = chrono::steady_clock::now();
+        // layers of tiles(loop variable)
+        int *tile_layer = new int[10];
+
+        // selected layers of tiles
+        int *selected_tile_layer = new int[viewport_tile.size()];
+
+        // temporal sum at each iteration
+        double *tmp_sum = new double[10];
+        int cnt = 0;
+        double max_vp_psnr = 0, vp_psnr, VIEWPORT_SIZE = 960.0 * 960.0;
+        // double enha_layer_psnr[] = {35.0, 37.0, 39.0};
+        double enha_layer_psnr[] = {125.0, 325.0, 725.0};
+
+        tile_pixel = player.vmask->get_pixel(cur_vp_pos);
+
+        // nested `for` loops to iterate over all possible combinations
+
+        // 1st viewport tile
+        for (tile_layer[0] = 0; tile_layer[0] < 3; tile_layer[0]++) {
+
+          // break if all tiles have been considered
+          cnt = 1;
+          if (cnt > viewport_tile.size())
+            break;
+
+          // break if bandwidth is insuficient
+          tmp_sum[0] = 0;
+          if (tile_layer[0] > 0) {
+            for (i = 1; i <= tile_layer[0]; i++)
+              tmp_sum[0] += meta.enha_layer_br[i - 1];
+          }
+          if (tmp_sum[0] + meta.base_layer_br >
+              metric.iter_est_thrp[iter_id] *
+                  metric.iter_down_time_budget[iter_id] / (meta.SD * 1000))
+            break;
+
+          // update optimal solution if all tiles have been looped
+          if (cnt == viewport_tile.size()) {
+            vp_psnr = 0;
+            for (i = 0; i < cnt; i++) {
+              selected_tile_layer[i] = tile_layer[i];
+              vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                         tile_pixel[viewport_tile[i] - 1] / VIEWPORT_SIZE;
+              if (vp_psnr > max_vp_psnr) {
+                max_vp_psnr = vp_psnr;
+              }
+            }
+          }
+
+          // 2nd tile
+          for (tile_layer[1] = 0; tile_layer[1] < 3; tile_layer[1]++) {
+
+            // break if all tiles have been considered
+            cnt = 2;
+            if (cnt > viewport_tile.size())
+              break;
+
+            // break if bandwidth is insuficient
+            tmp_sum[1] = 0;
+            if (tile_layer[1] > 0) {
+              for (i = 1; i <= tile_layer[1]; i++)
+                tmp_sum[1] += meta.enha_layer_br[i - 1];
+            }
+            if (tmp_sum[0] + tmp_sum[1] + meta.base_layer_br >
+                metric.iter_est_thrp[iter_id] *
+                    metric.iter_down_time_budget[iter_id] / (meta.SD * 1000))
+              break;
+
+            // update optimal solution if all tiles have been looped
+            if (cnt == viewport_tile.size()) {
+              vp_psnr = 0;
+              for (i = 0; i < cnt; i++) {
+                selected_tile_layer[i] = tile_layer[i];
+                vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                           tile_pixel[viewport_tile[i] - 1] / VIEWPORT_SIZE;
+                if (vp_psnr > max_vp_psnr) {
+                  max_vp_psnr = vp_psnr;
+                }
+              }
+            }
+
+            // 3rd tile
+            for (tile_layer[2] = 0; tile_layer[2] < 3; tile_layer[2]++) {
+
+              // break if all tiles have been considered
+              cnt = 3;
+              if (cnt > viewport_tile.size())
+                break;
+
+              // break if bandwidth is insuficient
+              tmp_sum[2] = 0;
+              if (tile_layer[2] > 0) {
+                for (i = 1; i <= tile_layer[2]; i++)
+                  tmp_sum[2] += meta.enha_layer_br[i - 1];
+              }
+              if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + meta.base_layer_br >
+                  metric.iter_est_thrp[iter_id] *
+                      metric.iter_down_time_budget[iter_id] / (meta.SD * 1000))
+                break;
+
+              // update optimal solution if all tiles have been looped
+              if (cnt == viewport_tile.size()) {
+                vp_psnr = 0;
+                for (i = 0; i < cnt; i++) {
+                  selected_tile_layer[i] = tile_layer[i];
+                  vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                             tile_pixel[viewport_tile[i] - 1] / VIEWPORT_SIZE;
+                  if (vp_psnr > max_vp_psnr) {
+                    max_vp_psnr = vp_psnr;
+                  }
+                }
+              }
+
+              // 4th tile
+              for (tile_layer[3] = 0; tile_layer[3] < 3; tile_layer[3]++) {
+
+                // break if all tiles have been considered
+                cnt = 4;
+                if (cnt > viewport_tile.size())
+                  break;
+
+                // break if bandwidth is insuficient
+                tmp_sum[3] = 0;
+                if (tile_layer[3] > 0) {
+                  for (i = 1; i <= tile_layer[3]; i++)
+                    tmp_sum[3] += meta.enha_layer_br[i - 1];
+                }
+                if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                        meta.base_layer_br >
+                    metric.iter_est_thrp[iter_id] *
+                        metric.iter_down_time_budget[iter_id] /
+                        (meta.SD * 1000))
+                  break;
+
+                // update optimal solution if all tiles have been looped
+                if (cnt == viewport_tile.size()) {
+                  vp_psnr = 0;
+                  for (i = 0; i < cnt; i++) {
+                    selected_tile_layer[i] = tile_layer[i];
+                    vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                               tile_pixel[viewport_tile[i] - 1] / VIEWPORT_SIZE;
+                    if (vp_psnr > max_vp_psnr) {
+                      max_vp_psnr = vp_psnr;
+                    }
+                  }
+                }
+
+                // 5th tile
+                for (tile_layer[4] = 0; tile_layer[4] < 3; tile_layer[4]++) {
+
+                  // break if all tiles have been considered
+                  cnt = 5;
+                  if (cnt > viewport_tile.size())
+                    break;
+
+                  // break if bandwidth is insuficient
+                  tmp_sum[4] = 0;
+                  if (tile_layer[4] > 0) {
+                    for (i = 1; i <= tile_layer[4]; i++)
+                      tmp_sum[4] += meta.enha_layer_br[i - 1];
+                  }
+                  if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                          tmp_sum[4] + meta.base_layer_br >
+                      metric.iter_est_thrp[iter_id] *
+                          metric.iter_down_time_budget[iter_id] /
+                          (meta.SD * 1000))
+                    break;
+
+                  // update optimal solution if all tiles have been looped
+                  if (cnt == viewport_tile.size()) {
+                    vp_psnr = 0;
+                    for (i = 0; i < cnt; i++) {
+                      selected_tile_layer[i] = tile_layer[i];
+                      vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                 tile_pixel[viewport_tile[i] - 1] /
+                                 VIEWPORT_SIZE;
+                      if (vp_psnr > max_vp_psnr) {
+                        max_vp_psnr = vp_psnr;
+                      }
+                    }
+                  }
+
+                  // 6th tile
+                  for (tile_layer[5] = 0; tile_layer[5] < 3; tile_layer[5]++) {
+
+                    // break if all tiles have been considered
+                    cnt = 6;
+                    if (cnt > viewport_tile.size())
+                      break;
+
+                    // break if bandwidth is insuficient
+                    tmp_sum[5] = 0;
+                    if (tile_layer[5] > 0) {
+                      for (i = 1; i <= tile_layer[5]; i++)
+                        tmp_sum[5] += meta.enha_layer_br[i - 1];
+                    }
+                    if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                            tmp_sum[4] + tmp_sum[5] + meta.base_layer_br >
+                        metric.iter_est_thrp[iter_id] *
+                            metric.iter_down_time_budget[iter_id] /
+                            (meta.SD * 1000))
+                      break;
+
+                    // update optimal solution if all tiles have been looped
+                    if (cnt == viewport_tile.size()) {
+                      vp_psnr = 0;
+                      for (i = 0; i < cnt; i++) {
+                        selected_tile_layer[i] = tile_layer[i];
+                        vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                   tile_pixel[viewport_tile[i] - 1] /
+                                   VIEWPORT_SIZE;
+                        if (vp_psnr > max_vp_psnr) {
+                          max_vp_psnr = vp_psnr;
+                        }
+                      }
+                    }
+
+                    // 7th tile
+                    for (tile_layer[6] = 0; tile_layer[6] < 3;
+                         tile_layer[6]++) {
+
+                      // break if all tiles have been considered
+                      cnt = 7;
+                      if (cnt > viewport_tile.size())
+                        break;
+
+                      // break if bandwidth is insuficient
+                      tmp_sum[6] = 0;
+                      if (tile_layer[6] > 0) {
+                        for (i = 1; i <= tile_layer[6]; i++)
+                          tmp_sum[6] += meta.enha_layer_br[i - 1];
+                      }
+                      if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                              tmp_sum[4] + tmp_sum[5] + tmp_sum[6] +
+                              meta.base_layer_br >
+                          metric.iter_est_thrp[iter_id] *
+                              metric.iter_down_time_budget[iter_id] /
+                              (meta.SD * 1000))
+                        break;
+
+                      // update optimal solution if all tiles have been looped
+                      if (cnt == viewport_tile.size()) {
+                        vp_psnr = 0;
+                        for (i = 0; i < cnt; i++) {
+                          selected_tile_layer[i] = tile_layer[i];
+                          vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                     tile_pixel[viewport_tile[i] - 1] /
+                                     VIEWPORT_SIZE;
+                          if (vp_psnr > max_vp_psnr) {
+                            max_vp_psnr = vp_psnr;
+                          }
+                        }
+                      }
+
+                      // 8th tile
+                      for (tile_layer[7] = 0; tile_layer[7] < 3;
+                           tile_layer[7]++) {
+
+                        // break if all tiles have been considered
+                        cnt = 8;
+                        if (cnt > viewport_tile.size())
+                          break;
+
+                        // break if bandwidth is insuficient
+                        tmp_sum[7] = 0;
+                        if (tile_layer[7] > 0) {
+                          for (i = 1; i <= tile_layer[7]; i++)
+                            tmp_sum[7] += meta.enha_layer_br[i - 1];
+                        }
+                        if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                                tmp_sum[4] + tmp_sum[5] + tmp_sum[6] +
+                                tmp_sum[7] + meta.base_layer_br >
+                            metric.iter_est_thrp[iter_id] *
+                                metric.iter_down_time_budget[iter_id] /
+                                (meta.SD * 1000))
+                          break;
+
+                        // update optimal solution if all tiles have been looped
+                        if (cnt == viewport_tile.size()) {
+                          vp_psnr = 0;
+                          for (i = 0; i < cnt; i++) {
+                            selected_tile_layer[i] = tile_layer[i];
+                            vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                       tile_pixel[viewport_tile[i] - 1] /
+                                       VIEWPORT_SIZE;
+                            if (vp_psnr > max_vp_psnr) {
+                              max_vp_psnr = vp_psnr;
+                            }
+                          }
+                        }
+
+                        // 9th tile
+                        for (tile_layer[8] = 0; tile_layer[8] < 3;
+                             tile_layer[8]++) {
+
+                          // break if all tiles have been considered
+                          cnt = 9;
+                          if (cnt > viewport_tile.size())
+                            break;
+
+                          // break if bandwidth is insuficient
+                          tmp_sum[8] = 0;
+                          if (tile_layer[8] > 0) {
+                            for (i = 1; i <= tile_layer[8]; i++)
+                              tmp_sum[8] += meta.enha_layer_br[i - 1];
+                          }
+                          if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] +
+                                  tmp_sum[3] + tmp_sum[4] + tmp_sum[5] +
+                                  tmp_sum[6] + tmp_sum[7] + tmp_sum[8] +
+                                  meta.base_layer_br >
+                              metric.iter_est_thrp[iter_id] *
+                                  metric.iter_down_time_budget[iter_id] /
+                                  (meta.SD * 1000))
+                            break;
+
+                          // update optimal solution if all tiles have been
+                          // looped
+                          if (cnt == viewport_tile.size()) {
+                            vp_psnr = 0;
+                            for (i = 0; i < cnt; i++) {
+                              selected_tile_layer[i] = tile_layer[i];
+                              vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                         tile_pixel[viewport_tile[i] - 1] /
+                                         VIEWPORT_SIZE;
+                              if (vp_psnr > max_vp_psnr) {
+                                max_vp_psnr = vp_psnr;
+                              }
+                            }
+                          }
+
+                          // 10th tile
+                          for (tile_layer[9] = 0; tile_layer[9] < 3;
+                               tile_layer[9]++) {
+
+                            // break if all tiles have been considered
+                            cnt = 10;
+                            if (cnt > viewport_tile.size())
+                              break;
+
+                            // break if bandwidth is insuficient
+                            tmp_sum[9] = 0;
+                            if (tile_layer[9] > 0) {
+                              for (i = 1; i <= tile_layer[9]; i++)
+                                tmp_sum[9] += meta.enha_layer_br[i - 1];
+                            }
+                            if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] +
+                                    tmp_sum[3] + tmp_sum[4] + tmp_sum[5] +
+                                    tmp_sum[6] + tmp_sum[7] + tmp_sum[8] +
+                                    tmp_sum[9] + meta.base_layer_br >
+                                metric.iter_est_thrp[iter_id] *
+                                    metric.iter_down_time_budget[iter_id] /
+                                    (meta.SD * 1000))
+                              break;
+
+                            // update optimal solution if all tiles have been
+                            // looped
+                            if (cnt == viewport_tile.size()) {
+                              vp_psnr = 0;
+                              for (i = 0; i < cnt; i++) {
+                                selected_tile_layer[i] = tile_layer[i];
+                                vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                           tile_pixel[viewport_tile[i] - 1] /
+                                           VIEWPORT_SIZE;
+                                if (vp_psnr > max_vp_psnr) {
+                                  max_vp_psnr = vp_psnr;
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        auto end = chrono::steady_clock::now();
+        // request tiles' layers
+        cout << "########### ALG4" << endl;
+        cout << "Calc. Time: "
+             << chrono::duration_cast<chrono::milliseconds>(end - start).count()
+             << endl;
+        cout << "budget: " << metric.iter_down_time_budget[iter_id] << ","
+             << meta.SD << endl;
+        for (i = 0; i < viewport_tile.size(); i++) {
+          cout << "(" << viewport_tile[i] << "," << selected_tile_layer[i]
+               << "),";
+        }
+        cout << endl;
+        for (layerId = 1; layerId <= 2; layerId++) {
+          for (i = 0; i < viewport_tile.size(); i++) {
+            if (selected_tile_layer[i] >= layerId) {
+              /* assign bitrate and weights */
+              metric.face_br[EL_seg_id][viewport_tile[i]][layerId] =
+                  meta.enha_layer_br[layerId - 1];
+              cout << meta.enha_layer_br[layerId - 1] << endl;
+
+              metric.face_ini_weight[EL_seg_id][viewport_tile[i]][layerId] = 20;
+
+              /* send request */
+              metric.face_stream_ID[EL_seg_id][viewport_tile[i]]
+                                   [layerId] = send_get_request(
+                  client, EL_seg_id, viewport_tile[i],
+                  metric.face_br[EL_seg_id][viewport_tile[i]][layerId], 0,
+                  metric.face_ini_weight[EL_seg_id][viewport_tile[i]][layerId]);
+              cout
+                  << "#[UTD2017_adaptation_vr] req_stream_id: "
+                  << metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId]
+                  << "," << metric.face_br[EL_seg_id][viewport_tile[i]][layerId]
+                  << endl;
+              metric.iter_req_stream[iter_id].push_back(
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId]);
+
+              /* map stream_id -> (index, faceid) */
+              streamInfo = new StreamInfo(EL_seg_id, viewport_tile[i], layerId);
+              metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId],
+                  streamInfo));
+
+              /* record request tiles */
+              metric.iter_tile_list[iter_id].push_back(viewport_tile[i]);
+
+              //
+              req_s_num++;
+            }
+          }
+        }
+        fin_s_num = 0;
       }
-      cout<<"Adaptation bitrate = "<< dang_face_rate [0]<<" "<< dang_face_rate [1] <<" Thrp "<<avail_thrp<<endl;
+
+      if (meta.ALG == 3 || meta.ALG == 5 || meta.ALG == 6 || meta.ALG == 7 ||
+          meta.ALG == 8 || meta.ALG == 9 || meta.ALG == 10 || meta.ALG == 11 ||
+          meta.ALG == 12 || meta.ALG == 13) {
+        // get number of pixels in viewport of each tile
+        // Number of tile: meta.NO_TILE
+        // List of tiles in viewport: viewport_tile
+        pri = viewport_tile;
+        tile_pixel_2 = player.vmask->get_pixel(cur_vp_pos);
+        int h, t;
+        double last_diff = 0;
+        int max_adj_layer = 0;
+        vector<int> adj_viewport_tile;
+        int dep_stream_id = 0;
+        double alpha = 0.9;
+        double thrp_budget;
+        cout << pri.size() << endl;
+        cout << "pri = ";
+        for (h = 0; h < pri.size(); h++) {
+          cout << pri[h] << ", ";
+        }
+        cout << endl;
+        cout << "tile pixel = ";
+        for (t = 0; t < 25; t++) {
+          cout << tile_pixel_2[t] << ", ";
+        }
+        cout << endl;
+
+        metric.iter_down_time_budget[iter_id] =
+            player.seg_playback_deadline[EL_seg_id] -
+            (std::chrono::duration_cast<std::chrono::microseconds>(
+                 std::chrono::steady_clock::now() -
+                 client->timing.connect_end_time)
+                 .count() /
+             1000.0);
+        cout << "time_budget: " << metric.iter_down_time_budget[iter_id]
+             << endl;
+        // Duc
+        // Bubble sort viewport tile according to number of pixels
+        bool swapped = false;
+        int tmp;
+        do {
+          swapped = false;
+          for (j = 0; j < pri.size() - 1; j++) {
+            if (tile_pixel_2[pri[j] - 1] < tile_pixel_2[pri[j + 1] - 1]) {
+              tmp = pri[j];
+              pri[j] = pri[j + 1];
+              pri[j + 1] = tmp;
+              swapped = true;
+            }
+          }
+        } while (swapped);
+
+        cout << "pri = ";
+        for (h = 0; h < pri.size(); h++) {
+          cout << pri[h] << ", ";
+          /* record request tiles */
+          metric.iter_tile_list[iter_id].push_back(pri[h]);
+        }
+        cout << endl;
+
+        /* calculate remaing time to download */
+        metric.iter_down_time_budget[iter_id] =
+            player.seg_playback_deadline[EL_seg_id] -
+            (std::chrono::duration_cast<std::chrono::microseconds>(
+                 std::chrono::steady_clock::now() -
+                 client->timing.connect_end_time)
+                 .count() /
+             1000.0);
+        cout << "time_budget: " << metric.iter_down_time_budget[iter_id]
+             << endl;
+        /* record selected tiles' versions */
+        // metric.iter_tile_version[iter_id] = l;
+
+        /* set maximum number of concurrent streams */
+        nghttp2_settings_entry iv;
+        iv.settings_id = NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS;
+        iv.value = 1;
+        int niv = 1;
+        int rv = nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE,
+                                         &iv, niv);
+        if (rv != 0) {
+          exit(-1);
+        }
+
+        sum_tile_br = meta.base_layer_br;
+
+        //
+        if (meta.ALG == 8 || meta.ALG == 11) {
+          thrp_budget = metric.iter_smooth_bitrate[iter_id];
+        } else {
+          thrp_budget = metric.iter_est_thrp[iter_id];
+        }
+
+        // extend viewport quality
+        if (meta.ALG == 6 || meta.ALG == 7 || meta.ALG == 8 || meta.ALG == 10 ||
+            meta.ALG == 11 || meta.ALG == 12 || meta.ALG == 13) {
+          // calculate average diff of last segment
+          for (i = 1; i <= meta.FPS * 3; i++) {
+            last_diff +=
+                player.frame_vp_err[player.playing_seg_id * meta.FPS - i];
+          }
+          last_diff = last_diff / (meta.FPS * 3);
+          cout << "last_diff=" << last_diff << endl;
+
+          if (meta.ALG == 6 || meta.ALG == 8 || meta.ALG == 11) {
+            // request adjacent tiles
+            if (last_diff > 25) {
+              max_adj_layer = 1;
+              adj_viewport_tile =
+                  player.vmask->get_adjacent_tile(cur_vp_pos, 3);
+            } else if (last_diff <= 25 && last_diff > 12) {
+              max_adj_layer = 1;
+              adj_viewport_tile =
+                  player.vmask->get_adjacent_tile(cur_vp_pos, 2);
+            } else if (last_diff <= 12 && last_diff > 5) {
+              max_adj_layer = 1;
+              adj_viewport_tile =
+                  player.vmask->get_adjacent_tile(cur_vp_pos, 1);
+            } else {
+              max_adj_layer = 0;
+            }
+
+            if (max_adj_layer > 0) {
+              cout << "diff = " << last_diff << endl;
+              for (layerId = 1; layerId <= max_adj_layer; layerId++) {
+                ID = 0;
+                while (ID < adj_viewport_tile.size() &&
+                       sum_tile_br + meta.enha_layer_br[layerId - 1] <
+                           alpha * thrp_budget) {
+                  /* assign bitrate and weights */
+                  metric.face_br[EL_seg_id][adj_viewport_tile[ID]][layerId] =
+                      meta.enha_layer_br[layerId - 1];
+                  cout << meta.enha_layer_br[layerId - 1] << endl;
+
+                  metric.face_ini_weight[EL_seg_id][adj_viewport_tile[ID]]
+                                        [layerId] = 20;
+
+                  /* send request */
+                  metric.face_stream_ID[EL_seg_id][adj_viewport_tile[ID]]
+                                       [layerId] = send_get_request(
+                      client, EL_seg_id, adj_viewport_tile[ID],
+                      metric.face_br[EL_seg_id][adj_viewport_tile[ID]][layerId],
+                      dep_stream_id,
+                      metric.face_ini_weight[EL_seg_id][adj_viewport_tile[ID]]
+                                            [layerId]);
+                  dep_stream_id =
+                      metric.face_stream_ID[EL_seg_id][adj_viewport_tile[ID]]
+                                           [layerId];
+
+                  cout << "###########[adj_viewport_tile] req_stream_id: "
+                       << metric.face_stream_ID[EL_seg_id]
+                                               [adj_viewport_tile[ID]][layerId]
+                       << "," << adj_viewport_tile[ID] << ","
+                       << metric.face_br[EL_seg_id][adj_viewport_tile[ID]]
+                                        [layerId]
+                       << endl;
+                  metric.iter_req_stream[iter_id].push_back(
+                      metric.face_stream_ID[EL_seg_id][adj_viewport_tile[ID]]
+                                           [layerId]);
+
+                  /* map stream_id -> (index, faceid) */
+                  streamInfo =
+                      new StreamInfo(EL_seg_id, adj_viewport_tile[ID], layerId);
+                  metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                      metric.face_stream_ID[EL_seg_id][adj_viewport_tile[ID]]
+                                           [layerId],
+                      streamInfo));
+
+                  //
+                  req_s_num++;
+                  sum_tile_br += meta.enha_layer_br[layerId - 1];
+                  ID += 1;
+                }
+              }
+            }
+          }
+          // ALG-7
+          if (meta.ALG == 7) {
+            cout << "#########ALG7: " << player.playing_seg_id + 1 << ","
+                 << last_diff << endl;
+            last_diff = 0;
+            for (i = 1; i <= meta.FPS; i++) {
+              last_diff +=
+                  player.frame_vp_err[player.playing_seg_id * meta.FPS - i];
+            }
+            last_diff = last_diff / (meta.FPS);
+
+            // idea 1: error of last segment
+            // if(player.playing_seg_id > 3 && last_diff > 20){
+            // 	adj_viewport_tile = player.vmask->get_adjacent_tile(cur_vp_pos,
+            // 1);
+            // }
+
+            // idea 2: errors of last two segments
+            if (player.playing_seg_id > 6 &&
+                (player.seg_vp_err[player.playing_seg_id - 1] > 20 ||
+                 player.seg_vp_err[player.playing_seg_id - 2] > 20)) {
+              adj_viewport_tile =
+                  player.vmask->get_adjacent_tile(cur_vp_pos, 1);
+              player.ext_width[player.playing_seg_id] = 1;
+            }
+
+            vector<int> tile_set = pri;
+            tile_set.insert(tile_set.end(), adj_viewport_tile.begin(),
+                            adj_viewport_tile.end());
+            cout << "#########ALG7: " << tile_set.size() << endl;
+            for (layerId = 1; layerId <= meta.EL_VER_NUM; layerId++) {
+              ID = 0;
+              while (ID < tile_set.size() &&
+                     sum_tile_br + meta.enha_layer_br[layerId - 1] <
+                         alpha * thrp_budget) {
+                /* assign bitrate and weights */
+                metric.face_br[EL_seg_id][tile_set[ID]][layerId] =
+                    meta.enha_layer_br[layerId - 1];
+                cout << meta.enha_layer_br[layerId - 1] << endl;
+
+                metric.face_ini_weight[EL_seg_id][tile_set[ID]][layerId] = 20;
+
+                /* send request */
+                metric.face_stream_ID[EL_seg_id][tile_set[ID]]
+                                     [layerId] = send_get_request(
+                    client, EL_seg_id, tile_set[ID],
+                    metric.face_br[EL_seg_id][tile_set[ID]][layerId],
+                    dep_stream_id,
+                    metric.face_ini_weight[EL_seg_id][tile_set[ID]][layerId]);
+                dep_stream_id =
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId];
+
+                cout << "###########[ALG 3] req_stream_id: "
+                     << metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId]
+                     << "," << tile_set[ID] << ","
+                     << metric.face_br[EL_seg_id][tile_set[ID]][layerId]
+                     << endl;
+                metric.iter_req_stream[iter_id].push_back(
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId]);
+
+                /* map stream_id -> (index, faceid) */
+                streamInfo = new StreamInfo(EL_seg_id, tile_set[ID], layerId);
+                metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId],
+                    streamInfo));
+
+                //
+                req_s_num++;
+                sum_tile_br += meta.enha_layer_br[layerId - 1];
+                ID += 1;
+              }
+            }
+          }
+          // ALG-10
+          if (meta.ALG == 10) {
+            cout << "#########ALG10: " << player.playing_seg_id + 1 << ","
+                 << last_diff << endl;
+            last_diff = 0;
+            for (i = 1; i <= meta.FPS; i++) {
+              last_diff +=
+                  player.frame_vp_err[player.playing_seg_id * meta.FPS - i];
+            }
+            last_diff = last_diff / (meta.FPS);
+
+            // idea 1: error of last segment
+            // if(player.playing_seg_id > 3 && last_diff > 20){
+            // 	adj_viewport_tile = player.vmask->get_adjacent_tile(cur_vp_pos,
+            // 1);
+            // }
+
+            // idea 2: errors of last two segments
+            if (player.playing_seg_id > 6 &&
+                (player.seg_vp_err[player.playing_seg_id - 1] > 20 ||
+                 player.seg_vp_err[player.playing_seg_id - 2] > 20)) {
+              adj_viewport_tile =
+                  player.vmask->get_adjacent_tile(cur_vp_pos, 1);
+            }
+
+            if (max_layerId > meta.EL_VER_NUM)
+              max_layerId = meta.EL_VER_NUM;
+            if (min_layerId < 1)
+              min_layerId = 1;
+            cout << "max layer ID = " << max_layerId
+                 << "; min layer ID = " << min_layerId << endl;
+            max_temp = min_layerId;
+            min_temp = max_layerId;
+            //
+            vector<int> tile_set = pri;
+            tile_set.insert(tile_set.end(), adj_viewport_tile.begin(),
+                            adj_viewport_tile.end());
+            cout << "#########ALG7: " << tile_set.size() << endl;
+            for (layerId = min_layerId; layerId <= max_layerId; layerId++) {
+              ID = 0;
+              while (ID < tile_set.size() &&
+                     sum_tile_br + meta.enha_layer_br[layerId - 1] <
+                         alpha * thrp_budget) {
+                /* assign bitrate and weights */
+                metric.face_br[EL_seg_id][tile_set[ID]][layerId] =
+                    meta.enha_layer_br[layerId - 1];
+                cout << meta.enha_layer_br[layerId - 1] << endl;
+
+                metric.face_ini_weight[EL_seg_id][tile_set[ID]][layerId] = 20;
+
+                /* send request */
+                metric.face_stream_ID[EL_seg_id][tile_set[ID]]
+                                     [layerId] = send_get_request(
+                    client, EL_seg_id, tile_set[ID],
+                    metric.face_br[EL_seg_id][tile_set[ID]][layerId],
+                    dep_stream_id,
+                    metric.face_ini_weight[EL_seg_id][tile_set[ID]][layerId]);
+                dep_stream_id =
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId];
+
+                cout << "###########[ALG 3] req_stream_id: "
+                     << metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId]
+                     << "," << tile_set[ID] << ","
+                     << metric.face_br[EL_seg_id][tile_set[ID]][layerId]
+                     << endl;
+                metric.iter_req_stream[iter_id].push_back(
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId]);
+
+                /* map stream_id -> (index, faceid) */
+                streamInfo = new StreamInfo(EL_seg_id, tile_set[ID], layerId);
+                metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId],
+                    streamInfo));
+
+                //
+                req_s_num++;
+                sum_tile_br += meta.enha_layer_br[layerId - 1];
+                ID += 1;
+                if (layerId > max_temp)
+                  max_temp = layerId;
+                if (layerId < min_temp)
+                  min_temp = layerId;
+                cout << "max temp = " << max_temp << "; min temp = " << min_temp
+                     << endl;
+              }
+            }
+            max_layerId = max_temp + 1;
+            min_layerId = min_temp - 1;
+          }
+          // ALG-7
+          if (meta.ALG == 12) {
+            cout << "#########ALG12: " << player.playing_seg_id + 1 << ","
+                 << last_diff << endl;
+            last_diff = 0;
+            for (i = 1; i <= meta.FPS; i++) {
+              last_diff +=
+                  player.frame_vp_err[player.playing_seg_id * meta.FPS - i];
+            }
+            last_diff = last_diff / (meta.FPS);
+
+            // idea 1: error of last segment
+            // if(player.playing_seg_id > 3 && last_diff > 20){
+            // 	adj_viewport_tile = player.vmask->get_adjacent_tile(cur_vp_pos,
+            // 1);
+            // }
+
+            // idea 2: errors of last two segments
+            // if(player.playing_seg_id > 6 &&
+            // (player.seg_vp_err[player.playing_seg_id-1] > 20 ||
+            // player.seg_vp_err[player.playing_seg_id-2] > 20)){
+            // 	adj_viewport_tile = player.vmask->get_adjacent_tile(cur_vp_pos,
+            // 1);
+            // }
+
+            // idea 3:
+            if (player.playing_seg_id > 6 &&
+                player.seg_smooth_vp_err[player.playing_seg_id - 1] > 20) {
+              player.ext_width[player.playing_seg_id] = 1;
+              adj_viewport_tile =
+                  player.vmask->get_adjacent_tile(cur_vp_pos, 1);
+            } else {
+              player.ext_width[player.playing_seg_id] = 0;
+            }
+
+            // idea 4:
+            // if(player.playing_seg_id > 6){
+            // 	if(player.seg_smooth_vp_err[player.playing_seg_id-1] > 40){
+            // 		player.ext_width[player.playing_seg_id] = 2;
+            // 		adj_viewport_tile =
+            // player.vmask->get_adjacent_tile(cur_vp_pos, 2); 	}else{
+            // if(player.seg_smooth_vp_err[player.playing_seg_id-1] > 20){
+            // player.ext_width[player.playing_seg_id] = 1;
+            // adj_viewport_tile = player.vmask->get_adjacent_tile(cur_vp_pos,
+            // 1);
+            // }else{ 			player.ext_width[player.playing_seg_id]
+            // = 0;
+            // 		}
+            // 	}
+            // }
+
+            vector<int> tile_set = pri;
+            tile_set.insert(tile_set.end(), adj_viewport_tile.begin(),
+                            adj_viewport_tile.end());
+            cout << "#########ALG7: " << tile_set.size() << endl;
+            for (layerId = 1; layerId <= meta.EL_VER_NUM; layerId++) {
+              ID = 0;
+              while (ID < tile_set.size() &&
+                     sum_tile_br + meta.enha_layer_br[layerId - 1] <
+                         alpha * thrp_budget) {
+                /* assign bitrate and weights */
+                metric.face_br[EL_seg_id][tile_set[ID]][layerId] =
+                    meta.enha_layer_br[layerId - 1];
+                cout << meta.enha_layer_br[layerId - 1] << endl;
+
+                metric.face_ini_weight[EL_seg_id][tile_set[ID]][layerId] = 20;
+
+                /* send request */
+                metric.face_stream_ID[EL_seg_id][tile_set[ID]]
+                                     [layerId] = send_get_request(
+                    client, EL_seg_id, tile_set[ID],
+                    metric.face_br[EL_seg_id][tile_set[ID]][layerId],
+                    dep_stream_id,
+                    metric.face_ini_weight[EL_seg_id][tile_set[ID]][layerId]);
+                dep_stream_id =
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId];
+
+                cout << "###########[ALG 3] req_stream_id: "
+                     << metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId]
+                     << "," << tile_set[ID] << ","
+                     << metric.face_br[EL_seg_id][tile_set[ID]][layerId]
+                     << endl;
+                metric.iter_req_stream[iter_id].push_back(
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId]);
+
+                /* map stream_id -> (index, faceid) */
+                streamInfo = new StreamInfo(EL_seg_id, tile_set[ID], layerId);
+                metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId],
+                    streamInfo));
+
+                //
+                req_s_num++;
+                sum_tile_br += meta.enha_layer_br[layerId - 1];
+                ID += 1;
+              }
+            }
+          }
+
+          if (meta.ALG == 13) {
+            cout << "#########ALG13: " << player.playing_seg_id + 1 << ","
+                 << last_diff << endl;
+            last_diff = 0;
+            for (i = 1; i <= meta.FPS; i++) {
+              last_diff +=
+                  player.frame_vp_err[player.playing_seg_id * meta.FPS - i];
+            }
+            last_diff = last_diff / (meta.FPS);
+
+            // idea 3:
+            if (player.playing_seg_id > 6 &&
+                // player.seg_vp_err_tile[player.playing_seg_id - 1] > 4 &&
+                // player.seg_smooth_vp_err[player.playing_seg_id - 7] > 20 &&
+                // player.seg_smooth_vp_err[player.playing_seg_id - 6] > 20 &&
+                player.seg_smooth_vp_err[player.playing_seg_id - 5] > 20 &&
+                player.seg_smooth_vp_err[player.playing_seg_id - 4] > 20 &&
+                player.seg_smooth_vp_err[player.playing_seg_id - 3] > 20 &&
+                player.seg_smooth_vp_err[player.playing_seg_id - 2] > 20 &&
+                player.seg_smooth_vp_err[player.playing_seg_id - 1] > 20) {
+              player.ext_width[player.playing_seg_id] = 1;
+              adj_viewport_tile =
+                  player.vmask->get_adjacent_tile(cur_vp_pos, 1);
+              min_layerId = 1;
+              max_layerId = meta.EL_VER_NUM;
+              cout << "[IF]: max layer ID = " << max_layerId
+                   << "; min layer ID = " << min_layerId << endl;
+            } else {
+              player.ext_width[player.playing_seg_id] = 0;
+              if (max_layerId > meta.EL_VER_NUM)
+                max_layerId = meta.EL_VER_NUM;
+              if (min_layerId < 1)
+                min_layerId = 1;
+              cout << "[ELSE]: max layer ID = " << max_layerId
+                   << "; min layer ID = " << min_layerId << endl;
+              max_temp = min_layerId;
+              min_temp = max_layerId;
+            }
+
+            vector<int> tile_set = pri;
+            tile_set.insert(tile_set.end(), adj_viewport_tile.begin(),
+                            adj_viewport_tile.end());
+            cout << "#########ALG13: " << tile_set.size() << endl;
+            for (layerId = min_layerId; layerId <= max_layerId; layerId++) {
+              ID = 0;
+              while (ID < tile_set.size() &&
+                     sum_tile_br + meta.enha_layer_br[layerId - 1] <
+                         alpha * thrp_budget) {
+                /* assign bitrate and weights */
+                metric.face_br[EL_seg_id][tile_set[ID]][layerId] =
+                    meta.enha_layer_br[layerId - 1];
+                cout << meta.enha_layer_br[layerId - 1] << endl;
+
+                metric.face_ini_weight[EL_seg_id][tile_set[ID]][layerId] = 20;
+
+                /* send request */
+                metric.face_stream_ID[EL_seg_id][tile_set[ID]]
+                                     [layerId] = send_get_request(
+                    client, EL_seg_id, tile_set[ID],
+                    metric.face_br[EL_seg_id][tile_set[ID]][layerId],
+                    dep_stream_id,
+                    metric.face_ini_weight[EL_seg_id][tile_set[ID]][layerId]);
+                dep_stream_id =
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId];
+
+                cout << "###########[ALG 13] req_stream_id: "
+                     << metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId]
+                     << "," << tile_set[ID] << ","
+                     << metric.face_br[EL_seg_id][tile_set[ID]][layerId]
+                     << endl;
+                metric.iter_req_stream[iter_id].push_back(
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId]);
+
+                /* map stream_id -> (index, faceid) */
+                streamInfo = new StreamInfo(EL_seg_id, tile_set[ID], layerId);
+                metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                    metric.face_stream_ID[EL_seg_id][tile_set[ID]][layerId],
+                    streamInfo));
+
+                //
+                req_s_num++;
+                sum_tile_br += meta.enha_layer_br[layerId - 1];
+                ID += 1;
+                if (layerId > max_temp)
+                  max_temp = layerId;
+                if (layerId < min_temp)
+                  min_temp = layerId;
+                cout << "max temp = " << max_temp << "; min temp = " << min_temp
+                     << endl;
+              }
+            }
+            max_layerId = max_temp + 1;
+            min_layerId = min_temp - 1;
+          }
+        }
+        if (meta.ALG == 5 || meta.ALG == 6 || meta.ALG == 8 || meta.ALG == 11) {
+          cout << "ID = " << ID << endl;
+          for (layerId = 1; layerId <= meta.EL_VER_NUM; layerId++) {
+            ID = 0;
+            while (ID < pri.size() &&
+                   sum_tile_br + meta.enha_layer_br[layerId - 1] <
+                       alpha * thrp_budget) {
+
+              /* assign bitrate and weights */
+              metric.face_br[EL_seg_id][pri[ID]][layerId] =
+                  meta.enha_layer_br[layerId - 1];
+              cout << meta.enha_layer_br[layerId - 1] << endl;
+
+              metric.face_ini_weight[EL_seg_id][pri[ID]][layerId] = 20;
+
+              /* send request */
+              metric.face_stream_ID[EL_seg_id][pri[ID]][layerId] =
+                  send_get_request(
+                      client, EL_seg_id, pri[ID],
+                      metric.face_br[EL_seg_id][pri[ID]][layerId],
+                      dep_stream_id,
+                      metric.face_ini_weight[EL_seg_id][pri[ID]][layerId]);
+              dep_stream_id =
+                  metric.face_stream_ID[EL_seg_id][pri[ID]][layerId];
+
+              cout << "###########[ALG 3] req_stream_id: "
+                   << metric.face_stream_ID[EL_seg_id][pri[ID]][layerId] << ","
+                   << pri[ID] << ","
+                   << metric.face_br[EL_seg_id][pri[ID]][layerId] << endl;
+              metric.iter_req_stream[iter_id].push_back(
+                  metric.face_stream_ID[EL_seg_id][pri[ID]][layerId]);
+
+              /* map stream_id -> (index, faceid) */
+              streamInfo = new StreamInfo(EL_seg_id, pri[ID], layerId);
+              metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                  metric.face_stream_ID[EL_seg_id][pri[ID]][layerId],
+                  streamInfo));
+
+              //
+              req_s_num++;
+              sum_tile_br += meta.enha_layer_br[layerId - 1];
+              ID += 1;
+              // std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            }
+          }
+        }
+        //
+        if (meta.ALG == 9) {
+          if (max_layerId > meta.EL_VER_NUM)
+            max_layerId = meta.EL_VER_NUM;
+          if (min_layerId < 1)
+            min_layerId = 1;
+          cout << "max layer ID = " << max_layerId
+               << "; min layer ID = " << min_layerId << endl;
+          max_temp = min_layerId;
+          min_temp = max_layerId;
+          for (layerId = min_layerId; layerId <= max_layerId; layerId++) {
+            ID = 0;
+            while (ID < pri.size() &&
+                   sum_tile_br + meta.enha_layer_br[layerId - 1] <
+                       alpha * thrp_budget) {
+
+              /* assign bitrate and weights */
+              metric.face_br[EL_seg_id][pri[ID]][layerId] =
+                  meta.enha_layer_br[layerId - 1];
+              cout << meta.enha_layer_br[layerId - 1] << endl;
+
+              metric.face_ini_weight[EL_seg_id][pri[ID]][layerId] = 20;
+
+              /* send request */
+              metric.face_stream_ID[EL_seg_id][pri[ID]][layerId] =
+                  send_get_request(
+                      client, EL_seg_id, pri[ID],
+                      metric.face_br[EL_seg_id][pri[ID]][layerId],
+                      dep_stream_id,
+                      metric.face_ini_weight[EL_seg_id][pri[ID]][layerId]);
+              dep_stream_id =
+                  metric.face_stream_ID[EL_seg_id][pri[ID]][layerId];
+
+              cout << "###########[ALG 9] req_stream_id: "
+                   << metric.face_stream_ID[EL_seg_id][pri[ID]][layerId] << ","
+                   << pri[ID] << ","
+                   << metric.face_br[EL_seg_id][pri[ID]][layerId] << endl;
+              metric.iter_req_stream[iter_id].push_back(
+                  metric.face_stream_ID[EL_seg_id][pri[ID]][layerId]);
+
+              /* map stream_id -> (index, faceid) */
+              streamInfo = new StreamInfo(EL_seg_id, pri[ID], layerId);
+              metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                  metric.face_stream_ID[EL_seg_id][pri[ID]][layerId],
+                  streamInfo));
+
+              //
+              req_s_num++;
+              sum_tile_br += meta.enha_layer_br[layerId - 1];
+              ID += 1;
+              if (layerId > max_temp)
+                max_temp = layerId;
+              if (layerId < min_temp)
+                min_temp = layerId;
+              cout << "max temp = " << max_temp << "; min temp = " << min_temp
+                   << endl;
+              // std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            }
+          }
+          max_layerId = max_temp + 1;
+          min_layerId = min_temp - 1;
+          // fin_s_num = 0;
+        }
+        fin_s_num = 0;
+      }
+      // exit(1);
+
+      if (meta.ALG == 1 || meta.ALG == 2) {
+
+        /* find optimal version for visible tiles */
+        for (l = 0; l < meta.EL_VER_NUM; l++) {
+          if (meta.base_layer_br +
+                  (EL_br_tmp + meta.enha_layer_br[l]) * viewport_tile.size() >
+              metric.iter_est_thrp[iter_id])
+            break;
+          EL_br_tmp += meta.enha_layer_br[l];
+        }
+
+        cout << "#[UTD2017]: Enhan. layer: " << l << ","
+             << metric.iter_est_thrp[iter_id] << "," << viewport_tile.size()
+             << endl;
+
+        /* send request for visible tiles */
+        if (l > 0) {
+          /* calculate remaing time to download */
+          metric.iter_down_time_budget[iter_id] =
+              player.seg_playback_deadline[EL_seg_id] -
+              (std::chrono::duration_cast<std::chrono::microseconds>(
+                   std::chrono::steady_clock::now() -
+                   client->timing.connect_end_time)
+                   .count() /
+               1000.0);
+
+          /* record selected tiles' versions */
+          metric.iter_tile_version[iter_id] = l;
+
+          /* set maximum number of concurrent streams */
+          nghttp2_settings_entry iv;
+          iv.settings_id = NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS;
+          iv.value = 1;
+          int niv = 1;
+          int rv = nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE,
+                                           &iv, niv);
+          if (rv != 0) {
+            exit(-1);
+          }
+          int dep_stream_id = 0;
+          /* send get requests */
+          for (i = 0; i < viewport_tile.size(); i++) {
+            for (layerId = 1; layerId <= l; layerId++) {
+
+              /* assign bitrate and weights */
+              metric.face_br[EL_seg_id][viewport_tile[i]][layerId] =
+                  meta.enha_layer_br[layerId - 1];
+              cout << meta.enha_layer_br[layerId - 1] << endl;
+
+              metric.face_ini_weight[EL_seg_id][viewport_tile[i]][layerId] = 20;
+
+              /* send request */
+              metric.face_stream_ID[EL_seg_id][viewport_tile[i]]
+                                   [layerId] = send_get_request(
+                  client, EL_seg_id, viewport_tile[i],
+                  metric.face_br[EL_seg_id][viewport_tile[i]][layerId],
+                  dep_stream_id,
+                  metric.face_ini_weight[EL_seg_id][viewport_tile[i]][layerId]);
+              dep_stream_id =
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId];
+
+              cout
+                  << "#[UTD2017_adaptation_vr] req_stream_id: "
+                  << metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId]
+                  << "," << metric.face_br[EL_seg_id][viewport_tile[i]][layerId]
+                  << endl;
+              metric.iter_req_stream[iter_id].push_back(
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId]);
+
+              /* map stream_id -> (index, faceid) */
+              streamInfo = new StreamInfo(EL_seg_id, viewport_tile[i], layerId);
+              metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId],
+                  streamInfo));
+
+              /* record request tiles */
+              metric.iter_tile_list[iter_id].push_back(viewport_tile[i]);
+
+              //
+              req_s_num++;
+            }
+          }
+
+          /* update status */
+          // req_s_num = viewport_tile.size() * l;
+          fin_s_num = 0;
+        }
+      }
+    }
+  }
+  if (req_s_num > 0) {
+    /* init status of this round */
+    metric.iter_down_data[iter_id] = 0;
+    metric.iter_down_data_frame[iter_id] = 0;
+    metric.iter_down_time[iter_id] = 0;
+  } else {
+    /* wait for 100ms, then repeat decision engine */
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    MMSP(client, iter_id);
+  }
 }
+void UTD2017_adaptation_vr(HttpClient *client, int iter_id) {
+  int l, i, layerId, j, k, ID;
+  int *cur_vp_pos;
+  int *tile_pixel;
+  int *tile_pixel_2;
+  vector<int> pri;
+  vector<int> viewport_tile;
+  double EL_br_tmp = 0;
+  int sum_tile_br;
+  StreamInfo *streamInfo;
 
-    
-    
+  cout << "#[UTD2017_adaptation_vr]: iter_id=" << iter_id << ","
+       << (player.playing_seg_id + 1) << endl;
+  metric.iter_start_time[iter_id] =
+      std::chrono::duration_cast<std::chrono::microseconds>(
+          get_time() - client->timing.connect_end_time)
+          .count() /
+      1000.0;
 
+  /* reset cancelled stream */
+  cancelled_request_stream.clear();
+
+  /* estimate available bandwidth for this iteration */
+  metric.est_iter_thrp(iter_id);
+  cout << "#[UTD2017_adaptation_vr]: est_thrp=" << metric.iter_est_thrp[iter_id]
+       << endl;
+  req_s_num = 0;
+  // if(BL_seg_id < meta.NO_SEG - 1){
+  if (BL_seg_id < meta.NO_SEG) {
+    /* request a BL layer chunk if B_cur < B_thres - 1*/
+    // if(player.get_cur_buff_size_second() < meta.BASE_BUFF_THRES - 1){
+    if (player.get_cur_buff_size_second() < meta.BASE_BUFF_THRES - 1) {
+      /* next base layer segment ID */
+      metric.iter_tile_version[iter_id] = 0;
+      metric.iter_down_time_budget[iter_id] =
+          player.seg_playback_deadline[BL_seg_id] -
+          (std::chrono::duration_cast<std::chrono::microseconds>(
+               std::chrono::steady_clock::now() -
+               client->timing.connect_end_time)
+               .count() /
+           1000.0);
+
+      /* Download base layer of the current segment */
+      metric.face_br[BL_seg_id][0][0] = meta.base_layer_br;
+      metric.face_ini_weight[BL_seg_id][0][0] = 20;
+
+      /* send request */
+      metric.face_stream_ID[BL_seg_id][0][0] = send_get_request(
+          client, BL_seg_id, 0, metric.face_br[BL_seg_id][0][0], 0,
+          metric.face_ini_weight[BL_seg_id][0][0]);
+      cout << "#[UTD2017_adaptation_vr] req_stream_id: "
+           << metric.face_stream_ID[BL_seg_id][0][0] << "," << BL_seg_id
+           << endl;
+
+      /* map stream_id -> (index, faceid) */
+      streamInfo = new StreamInfo(BL_seg_id, 0, 0);
+      metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+          metric.face_stream_ID[BL_seg_id][0][0], streamInfo));
+      metric.iter_req_stream[iter_id].push_back(
+          metric.face_stream_ID[BL_seg_id][0][0]);
+
+      /* update status */
+      req_s_num = 1;
+      fin_s_num = 0;
+    }
+  }
+  if (req_s_num == 0) {
+    /* decide and request EL layer chunks of tiles of next played segment */
+    if (player.playing_seg_id == meta.NO_SEG - 1) {
+      return;
+    }
+
+    /* headNext(): get next playing segment */
+    EL_seg_id = player.playing_seg_id + 1;
+    // if(!metric.seg_EL_download[EL_seg_id] && BL_seg_id < meta.NO_SEG){
+    if (!metric.seg_EL_download[EL_seg_id] && EL_seg_id < meta.NO_SEG) {
+
+      /* predictViewport */
+      cur_vp_pos = player.htrace->get_vp_pos(player.get_cur_play_time());
+      viewport_tile = player.vmask->get_visible_tile(cur_vp_pos);
+
+      cout << "#[UTD2017]: " << cur_vp_pos[0] << ", " << cur_vp_pos[1] << ", "
+           << player.get_cur_play_time() << endl;
+
+      if (meta.ALG == 4) {
+        metric.iter_down_time_budget[iter_id] =
+            player.seg_playback_deadline[EL_seg_id] -
+            (std::chrono::duration_cast<std::chrono::microseconds>(
+                 std::chrono::steady_clock::now() -
+                 client->timing.connect_end_time)
+                 .count() /
+             1000.0);
+        cout << "ALG4: " << metric.iter_down_time_budget[iter_id] << endl;
+        auto start = chrono::steady_clock::now();
+        // layers of tiles(loop variable)
+        int *tile_layer = new int[10];
+
+        // selected layers of tiles
+        int *selected_tile_layer = new int[viewport_tile.size()];
+
+        // temporal sum at each iteration
+        double *tmp_sum = new double[10];
+        int cnt = 0;
+        double max_vp_psnr = 0, vp_psnr, VIEWPORT_SIZE = 960.0 * 960.0;
+        // double enha_layer_psnr[] = {35.0, 37.0, 39.0};
+        double enha_layer_psnr[] = {125.0, 325.0, 725.0};
+
+        tile_pixel = player.vmask->get_pixel(cur_vp_pos);
+
+        // nested `for` loops to iterate over all possible combinations
+
+        // 1st viewport tile
+        for (tile_layer[0] = 0; tile_layer[0] < 3; tile_layer[0]++) {
+
+          // break if all tiles have been considered
+          cnt = 1;
+          if (cnt > viewport_tile.size())
+            break;
+
+          // break if bandwidth is insuficient
+          tmp_sum[0] = 0;
+          if (tile_layer[0] > 0) {
+            for (i = 1; i <= tile_layer[0]; i++)
+              tmp_sum[0] += meta.enha_layer_br[i - 1];
+          }
+          if (tmp_sum[0] + meta.base_layer_br >
+              metric.iter_est_thrp[iter_id] *
+                  metric.iter_down_time_budget[iter_id] / (meta.SD * 1000))
+            break;
+
+          // update optimal solution if all tiles have been looped
+          if (cnt == viewport_tile.size()) {
+            vp_psnr = 0;
+            for (i = 0; i < cnt; i++) {
+              selected_tile_layer[i] = tile_layer[i];
+              vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                         tile_pixel[viewport_tile[i] - 1] / VIEWPORT_SIZE;
+              if (vp_psnr > max_vp_psnr) {
+                max_vp_psnr = vp_psnr;
+              }
+            }
+          }
+
+          // 2nd tile
+          for (tile_layer[1] = 0; tile_layer[1] < 3; tile_layer[1]++) {
+
+            // break if all tiles have been considered
+            cnt = 2;
+            if (cnt > viewport_tile.size())
+              break;
+
+            // break if bandwidth is insuficient
+            tmp_sum[1] = 0;
+            if (tile_layer[1] > 0) {
+              for (i = 1; i <= tile_layer[1]; i++)
+                tmp_sum[1] += meta.enha_layer_br[i - 1];
+            }
+            if (tmp_sum[0] + tmp_sum[1] + meta.base_layer_br >
+                metric.iter_est_thrp[iter_id] *
+                    metric.iter_down_time_budget[iter_id] / (meta.SD * 1000))
+              break;
+
+            // update optimal solution if all tiles have been looped
+            if (cnt == viewport_tile.size()) {
+              vp_psnr = 0;
+              for (i = 0; i < cnt; i++) {
+                selected_tile_layer[i] = tile_layer[i];
+                vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                           tile_pixel[viewport_tile[i] - 1] / VIEWPORT_SIZE;
+                if (vp_psnr > max_vp_psnr) {
+                  max_vp_psnr = vp_psnr;
+                }
+              }
+            }
+
+            // 3rd tile
+            for (tile_layer[2] = 0; tile_layer[2] < 3; tile_layer[2]++) {
+
+              // break if all tiles have been considered
+              cnt = 3;
+              if (cnt > viewport_tile.size())
+                break;
+
+              // break if bandwidth is insuficient
+              tmp_sum[2] = 0;
+              if (tile_layer[2] > 0) {
+                for (i = 1; i <= tile_layer[2]; i++)
+                  tmp_sum[2] += meta.enha_layer_br[i - 1];
+              }
+              if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + meta.base_layer_br >
+                  metric.iter_est_thrp[iter_id] *
+                      metric.iter_down_time_budget[iter_id] / (meta.SD * 1000))
+                break;
+
+              // update optimal solution if all tiles have been looped
+              if (cnt == viewport_tile.size()) {
+                vp_psnr = 0;
+                for (i = 0; i < cnt; i++) {
+                  selected_tile_layer[i] = tile_layer[i];
+                  vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                             tile_pixel[viewport_tile[i] - 1] / VIEWPORT_SIZE;
+                  if (vp_psnr > max_vp_psnr) {
+                    max_vp_psnr = vp_psnr;
+                  }
+                }
+              }
+
+              // 4th tile
+              for (tile_layer[3] = 0; tile_layer[3] < 3; tile_layer[3]++) {
+
+                // break if all tiles have been considered
+                cnt = 4;
+                if (cnt > viewport_tile.size())
+                  break;
+
+                // break if bandwidth is insuficient
+                tmp_sum[3] = 0;
+                if (tile_layer[3] > 0) {
+                  for (i = 1; i <= tile_layer[3]; i++)
+                    tmp_sum[3] += meta.enha_layer_br[i - 1];
+                }
+                if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                        meta.base_layer_br >
+                    metric.iter_est_thrp[iter_id] *
+                        metric.iter_down_time_budget[iter_id] /
+                        (meta.SD * 1000))
+                  break;
+
+                // update optimal solution if all tiles have been looped
+                if (cnt == viewport_tile.size()) {
+                  vp_psnr = 0;
+                  for (i = 0; i < cnt; i++) {
+                    selected_tile_layer[i] = tile_layer[i];
+                    vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                               tile_pixel[viewport_tile[i] - 1] / VIEWPORT_SIZE;
+                    if (vp_psnr > max_vp_psnr) {
+                      max_vp_psnr = vp_psnr;
+                    }
+                  }
+                }
+
+                // 5th tile
+                for (tile_layer[4] = 0; tile_layer[4] < 3; tile_layer[4]++) {
+
+                  // break if all tiles have been considered
+                  cnt = 5;
+                  if (cnt > viewport_tile.size())
+                    break;
+
+                  // break if bandwidth is insuficient
+                  tmp_sum[4] = 0;
+                  if (tile_layer[4] > 0) {
+                    for (i = 1; i <= tile_layer[4]; i++)
+                      tmp_sum[4] += meta.enha_layer_br[i - 1];
+                  }
+                  if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                          tmp_sum[4] + meta.base_layer_br >
+                      metric.iter_est_thrp[iter_id] *
+                          metric.iter_down_time_budget[iter_id] /
+                          (meta.SD * 1000))
+                    break;
+
+                  // update optimal solution if all tiles have been looped
+                  if (cnt == viewport_tile.size()) {
+                    vp_psnr = 0;
+                    for (i = 0; i < cnt; i++) {
+                      selected_tile_layer[i] = tile_layer[i];
+                      vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                 tile_pixel[viewport_tile[i] - 1] /
+                                 VIEWPORT_SIZE;
+                      if (vp_psnr > max_vp_psnr) {
+                        max_vp_psnr = vp_psnr;
+                      }
+                    }
+                  }
+
+                  // 6th tile
+                  for (tile_layer[5] = 0; tile_layer[5] < 3; tile_layer[5]++) {
+
+                    // break if all tiles have been considered
+                    cnt = 6;
+                    if (cnt > viewport_tile.size())
+                      break;
+
+                    // break if bandwidth is insuficient
+                    tmp_sum[5] = 0;
+                    if (tile_layer[5] > 0) {
+                      for (i = 1; i <= tile_layer[5]; i++)
+                        tmp_sum[5] += meta.enha_layer_br[i - 1];
+                    }
+                    if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                            tmp_sum[4] + tmp_sum[5] + meta.base_layer_br >
+                        metric.iter_est_thrp[iter_id] *
+                            metric.iter_down_time_budget[iter_id] /
+                            (meta.SD * 1000))
+                      break;
+
+                    // update optimal solution if all tiles have been looped
+                    if (cnt == viewport_tile.size()) {
+                      vp_psnr = 0;
+                      for (i = 0; i < cnt; i++) {
+                        selected_tile_layer[i] = tile_layer[i];
+                        vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                   tile_pixel[viewport_tile[i] - 1] /
+                                   VIEWPORT_SIZE;
+                        if (vp_psnr > max_vp_psnr) {
+                          max_vp_psnr = vp_psnr;
+                        }
+                      }
+                    }
+
+                    // 7th tile
+                    for (tile_layer[6] = 0; tile_layer[6] < 3;
+                         tile_layer[6]++) {
+
+                      // break if all tiles have been considered
+                      cnt = 7;
+                      if (cnt > viewport_tile.size())
+                        break;
+
+                      // break if bandwidth is insuficient
+                      tmp_sum[6] = 0;
+                      if (tile_layer[6] > 0) {
+                        for (i = 1; i <= tile_layer[6]; i++)
+                          tmp_sum[6] += meta.enha_layer_br[i - 1];
+                      }
+                      if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                              tmp_sum[4] + tmp_sum[5] + tmp_sum[6] +
+                              meta.base_layer_br >
+                          metric.iter_est_thrp[iter_id] *
+                              metric.iter_down_time_budget[iter_id] /
+                              (meta.SD * 1000))
+                        break;
+
+                      // update optimal solution if all tiles have been looped
+                      if (cnt == viewport_tile.size()) {
+                        vp_psnr = 0;
+                        for (i = 0; i < cnt; i++) {
+                          selected_tile_layer[i] = tile_layer[i];
+                          vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                     tile_pixel[viewport_tile[i] - 1] /
+                                     VIEWPORT_SIZE;
+                          if (vp_psnr > max_vp_psnr) {
+                            max_vp_psnr = vp_psnr;
+                          }
+                        }
+                      }
+
+                      // 8th tile
+                      for (tile_layer[7] = 0; tile_layer[7] < 3;
+                           tile_layer[7]++) {
+
+                        // break if all tiles have been considered
+                        cnt = 8;
+                        if (cnt > viewport_tile.size())
+                          break;
+
+                        // break if bandwidth is insuficient
+                        tmp_sum[7] = 0;
+                        if (tile_layer[7] > 0) {
+                          for (i = 1; i <= tile_layer[7]; i++)
+                            tmp_sum[7] += meta.enha_layer_br[i - 1];
+                        }
+                        if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] + tmp_sum[3] +
+                                tmp_sum[4] + tmp_sum[5] + tmp_sum[6] +
+                                tmp_sum[7] + meta.base_layer_br >
+                            metric.iter_est_thrp[iter_id] *
+                                metric.iter_down_time_budget[iter_id] /
+                                (meta.SD * 1000))
+                          break;
+
+                        // update optimal solution if all tiles have been looped
+                        if (cnt == viewport_tile.size()) {
+                          vp_psnr = 0;
+                          for (i = 0; i < cnt; i++) {
+                            selected_tile_layer[i] = tile_layer[i];
+                            vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                       tile_pixel[viewport_tile[i] - 1] /
+                                       VIEWPORT_SIZE;
+                            if (vp_psnr > max_vp_psnr) {
+                              max_vp_psnr = vp_psnr;
+                            }
+                          }
+                        }
+
+                        // 9th tile
+                        for (tile_layer[8] = 0; tile_layer[8] < 3;
+                             tile_layer[8]++) {
+
+                          // break if all tiles have been considered
+                          cnt = 9;
+                          if (cnt > viewport_tile.size())
+                            break;
+
+                          // break if bandwidth is insuficient
+                          tmp_sum[8] = 0;
+                          if (tile_layer[8] > 0) {
+                            for (i = 1; i <= tile_layer[8]; i++)
+                              tmp_sum[8] += meta.enha_layer_br[i - 1];
+                          }
+                          if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] +
+                                  tmp_sum[3] + tmp_sum[4] + tmp_sum[5] +
+                                  tmp_sum[6] + tmp_sum[7] + tmp_sum[8] +
+                                  meta.base_layer_br >
+                              metric.iter_est_thrp[iter_id] *
+                                  metric.iter_down_time_budget[iter_id] /
+                                  (meta.SD * 1000))
+                            break;
+
+                          // update optimal solution if all tiles have been
+                          // looped
+                          if (cnt == viewport_tile.size()) {
+                            vp_psnr = 0;
+                            for (i = 0; i < cnt; i++) {
+                              selected_tile_layer[i] = tile_layer[i];
+                              vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                         tile_pixel[viewport_tile[i] - 1] /
+                                         VIEWPORT_SIZE;
+                              if (vp_psnr > max_vp_psnr) {
+                                max_vp_psnr = vp_psnr;
+                              }
+                            }
+                          }
+
+                          // 10th tile
+                          for (tile_layer[9] = 0; tile_layer[9] < 3;
+                               tile_layer[9]++) {
+
+                            // break if all tiles have been considered
+                            cnt = 10;
+                            if (cnt > viewport_tile.size())
+                              break;
+
+                            // break if bandwidth is insuficient
+                            tmp_sum[9] = 0;
+                            if (tile_layer[9] > 0) {
+                              for (i = 1; i <= tile_layer[9]; i++)
+                                tmp_sum[9] += meta.enha_layer_br[i - 1];
+                            }
+                            if (tmp_sum[0] + tmp_sum[1] + tmp_sum[2] +
+                                    tmp_sum[3] + tmp_sum[4] + tmp_sum[5] +
+                                    tmp_sum[6] + tmp_sum[7] + tmp_sum[8] +
+                                    tmp_sum[9] + meta.base_layer_br >
+                                metric.iter_est_thrp[iter_id] *
+                                    metric.iter_down_time_budget[iter_id] /
+                                    (meta.SD * 1000))
+                              break;
+
+                            // update optimal solution if all tiles have been
+                            // looped
+                            if (cnt == viewport_tile.size()) {
+                              vp_psnr = 0;
+                              for (i = 0; i < cnt; i++) {
+                                selected_tile_layer[i] = tile_layer[i];
+                                vp_psnr += enha_layer_psnr[tile_layer[i]] *
+                                           tile_pixel[viewport_tile[i] - 1] /
+                                           VIEWPORT_SIZE;
+                                if (vp_psnr > max_vp_psnr) {
+                                  max_vp_psnr = vp_psnr;
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        auto end = chrono::steady_clock::now();
+        // request tiles' layers
+        cout << "########### ALG4" << endl;
+        cout << "Calc. Time: "
+             << chrono::duration_cast<chrono::milliseconds>(end - start).count()
+             << endl;
+        cout << "budget: " << metric.iter_down_time_budget[iter_id] << ","
+             << meta.SD << endl;
+        for (i = 0; i < viewport_tile.size(); i++) {
+          cout << "(" << viewport_tile[i] << "," << selected_tile_layer[i]
+               << "),";
+        }
+        cout << endl;
+        for (layerId = 1; layerId <= 2; layerId++) {
+          for (i = 0; i < viewport_tile.size(); i++) {
+            if (selected_tile_layer[i] >= layerId) {
+              /* assign bitrate and weights */
+              metric.face_br[EL_seg_id][viewport_tile[i]][layerId] =
+                  meta.enha_layer_br[layerId - 1];
+              cout << meta.enha_layer_br[layerId - 1] << endl;
+
+              metric.face_ini_weight[EL_seg_id][viewport_tile[i]][layerId] = 20;
+
+              /* send request */
+              metric.face_stream_ID[EL_seg_id][viewport_tile[i]]
+                                   [layerId] = send_get_request(
+                  client, EL_seg_id, viewport_tile[i],
+                  metric.face_br[EL_seg_id][viewport_tile[i]][layerId], 0,
+                  metric.face_ini_weight[EL_seg_id][viewport_tile[i]][layerId]);
+              cout
+                  << "#[UTD2017_adaptation_vr] req_stream_id: "
+                  << metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId]
+                  << "," << metric.face_br[EL_seg_id][viewport_tile[i]][layerId]
+                  << endl;
+              metric.iter_req_stream[iter_id].push_back(
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId]);
+
+              /* map stream_id -> (index, faceid) */
+              streamInfo = new StreamInfo(EL_seg_id, viewport_tile[i], layerId);
+              metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId],
+                  streamInfo));
+
+              /* record request tiles */
+              metric.iter_tile_list[iter_id].push_back(viewport_tile[i]);
+
+              //
+              req_s_num++;
+            }
+          }
+        }
+        fin_s_num = 0;
+      }
+
+      ////////// ALGORITHM 3 /////////////////
+      if (meta.ALG == 3 || meta.ALG == 5) {
+        // get number of pixels in viewport of each tile
+        // Number of tile: meta.NO_TILE
+        // List of tiles in viewport: viewport_tile
+        pri = viewport_tile;
+        tile_pixel_2 = player.vmask->get_pixel(cur_vp_pos);
+        int h, t;
+        cout << pri.size() << endl;
+        cout << "pri = ";
+        for (h = 0; h < pri.size(); h++) {
+          cout << pri[h] << ", ";
+        }
+        cout << endl;
+        cout << "tile pixel = ";
+        for (t = 0; t < 25; t++) {
+          cout << tile_pixel_2[t] << ", ";
+        }
+        cout << endl;
+
+        metric.iter_down_time_budget[iter_id] =
+            player.seg_playback_deadline[EL_seg_id] -
+            (std::chrono::duration_cast<std::chrono::microseconds>(
+                 std::chrono::steady_clock::now() -
+                 client->timing.connect_end_time)
+                 .count() /
+             1000.0);
+        cout << "time_budget: " << metric.iter_down_time_budget[iter_id]
+             << endl;
+        // Duc
+        // Bubble sort viewport tile according to number of pixels
+        bool swapped = false;
+        int tmp;
+        do {
+          swapped = false;
+          for (j = 0; j < pri.size() - 1; j++) {
+            if (tile_pixel_2[pri[j] - 1] < tile_pixel_2[pri[j + 1] - 1]) {
+              tmp = pri[j];
+              pri[j] = pri[j + 1];
+              pri[j + 1] = tmp;
+              swapped = true;
+            }
+          }
+        } while (swapped);
+
+        cout << "pri = ";
+        for (h = 0; h < pri.size(); h++) {
+          cout << pri[h] << ", ";
+          /* record request tiles */
+          metric.iter_tile_list[iter_id].push_back(pri[h]);
+        }
+        cout << endl;
+
+        /* calculate remaing time to download */
+        metric.iter_down_time_budget[iter_id] =
+            player.seg_playback_deadline[EL_seg_id] -
+            (std::chrono::duration_cast<std::chrono::microseconds>(
+                 std::chrono::steady_clock::now() -
+                 client->timing.connect_end_time)
+                 .count() /
+             1000.0);
+        cout << "time_budget: " << metric.iter_down_time_budget[iter_id]
+             << endl;
+        /* record selected tiles' versions */
+        // metric.iter_tile_version[iter_id] = l;
+
+        /* set maximum number of concurrent streams */
+        nghttp2_settings_entry iv;
+        iv.settings_id = NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS;
+        iv.value = 1;
+        int niv = 1;
+        int rv = nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE,
+                                         &iv, niv);
+        if (rv != 0) {
+          exit(-1);
+        }
+
+        sum_tile_br = meta.base_layer_br;
+        cout << "ID = " << ID << endl;
+        int dep_stream_id = 0;
+        double alpha = 0.9;
+        for (layerId = 1; layerId <= 2; layerId++) {
+          ID = 0;
+          while (ID < pri.size() &&
+                 sum_tile_br + meta.enha_layer_br[layerId - 1] <
+                     alpha * metric.iter_est_thrp[iter_id]) {
+
+            /* assign bitrate and weights */
+            metric.face_br[EL_seg_id][pri[ID]][layerId] =
+                meta.enha_layer_br[layerId - 1];
+            cout << meta.enha_layer_br[layerId - 1] << endl;
+
+            metric.face_ini_weight[EL_seg_id][pri[ID]][layerId] = 20;
+
+            /* send request */
+            metric.face_stream_ID[EL_seg_id][pri[ID]][layerId] =
+                send_get_request(
+                    client, EL_seg_id, pri[ID],
+                    metric.face_br[EL_seg_id][pri[ID]][layerId], dep_stream_id,
+                    metric.face_ini_weight[EL_seg_id][pri[ID]][layerId]);
+            dep_stream_id = metric.face_stream_ID[EL_seg_id][pri[ID]][layerId];
+
+            cout << "###########[ALG 3] req_stream_id: "
+                 << metric.face_stream_ID[EL_seg_id][pri[ID]][layerId] << ","
+                 << pri[ID] << ","
+                 << metric.face_br[EL_seg_id][pri[ID]][layerId] << endl;
+            metric.iter_req_stream[iter_id].push_back(
+                metric.face_stream_ID[EL_seg_id][pri[ID]][layerId]);
+
+            /* map stream_id -> (index, faceid) */
+            streamInfo = new StreamInfo(EL_seg_id, pri[ID], layerId);
+            metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                metric.face_stream_ID[EL_seg_id][pri[ID]][layerId],
+                streamInfo));
+
+            //
+            req_s_num++;
+            sum_tile_br += meta.enha_layer_br[layerId - 1];
+            ID += 1;
+            // std::this_thread::sleep_for(std::chrono::milliseconds(2));
+          }
+        }
+        fin_s_num = 0;
+      }
+      // exit(1);
+
+      if (meta.ALG == 1 || meta.ALG == 2) {
+
+        /* find optimal version for visible tiles */
+        for (l = 0; l < meta.EL_VER_NUM; l++) {
+          if (meta.base_layer_br +
+                  (EL_br_tmp + meta.enha_layer_br[l]) * viewport_tile.size() >
+              metric.iter_est_thrp[iter_id])
+            break;
+          EL_br_tmp += meta.enha_layer_br[l];
+        }
+
+        cout << "#[UTD2017]: Enhan. layer: " << l << ","
+             << metric.iter_est_thrp[iter_id] << "," << viewport_tile.size()
+             << endl;
+
+        /* send request for visible tiles */
+        if (l > 0) {
+          /* calculate remaing time to download */
+          metric.iter_down_time_budget[iter_id] =
+              player.seg_playback_deadline[EL_seg_id] -
+              (std::chrono::duration_cast<std::chrono::microseconds>(
+                   std::chrono::steady_clock::now() -
+                   client->timing.connect_end_time)
+                   .count() /
+               1000.0);
+
+          /* record selected tiles' versions */
+          metric.iter_tile_version[iter_id] = l;
+
+          /* set maximum number of concurrent streams */
+          nghttp2_settings_entry iv;
+          iv.settings_id = NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS;
+          iv.value = 1;
+          int niv = 1;
+          int rv = nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE,
+                                           &iv, niv);
+          if (rv != 0) {
+            exit(-1);
+          }
+          int dep_stream_id = 0;
+          /* send get requests */
+          for (i = 0; i < viewport_tile.size(); i++) {
+            for (layerId = 1; layerId <= l; layerId++) {
+
+              /* assign bitrate and weights */
+              metric.face_br[EL_seg_id][viewport_tile[i]][layerId] =
+                  meta.enha_layer_br[layerId - 1];
+              cout << meta.enha_layer_br[layerId - 1] << endl;
+
+              metric.face_ini_weight[EL_seg_id][viewport_tile[i]][layerId] = 20;
+
+              /* send request */
+              metric.face_stream_ID[EL_seg_id][viewport_tile[i]]
+                                   [layerId] = send_get_request(
+                  client, EL_seg_id, viewport_tile[i],
+                  metric.face_br[EL_seg_id][viewport_tile[i]][layerId],
+                  dep_stream_id,
+                  metric.face_ini_weight[EL_seg_id][viewport_tile[i]][layerId]);
+              dep_stream_id =
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId];
+
+              cout
+                  << "#[UTD2017_adaptation_vr] req_stream_id: "
+                  << metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId]
+                  << "," << metric.face_br[EL_seg_id][viewport_tile[i]][layerId]
+                  << endl;
+              metric.iter_req_stream[iter_id].push_back(
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId]);
+
+              /* map stream_id -> (index, faceid) */
+              streamInfo = new StreamInfo(EL_seg_id, viewport_tile[i], layerId);
+              metric.RequestStreamInfo.insert(std::pair<int, StreamInfo *>(
+                  metric.face_stream_ID[EL_seg_id][viewport_tile[i]][layerId],
+                  streamInfo));
+
+              /* record request tiles */
+              metric.iter_tile_list[iter_id].push_back(viewport_tile[i]);
+
+              //
+              req_s_num++;
+            }
+          }
+
+          /* update status */
+          // req_s_num = viewport_tile.size() * l;
+          fin_s_num = 0;
+        }
+      }
+    }
+  }
+  if (req_s_num > 0) {
+    /* init status of this round */
+    metric.iter_down_data[iter_id] = 0;
+    metric.iter_down_data_frame[iter_id] = 0;
+    metric.iter_down_time[iter_id] = 0;
+  } else {
+    /* wait for 100ms, then repeat decision engine */
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    UTD2017_adaptation_vr(client, iter_id);
+  }
+}
 
 // }
 //-----------------------------------------------
 //----------------------------------------------
-int check_tile_in_region (int tile){
-  for(int i = 0 ; i < region1.size() ; i++)
-    if(region1.at(i) == tile)
+int check_tile_in_region(int tile) {
+  for (int i = 0; i < region1.size(); i++)
+    if (region1.at(i) == tile)
       return 1;
-  for(int i = 0 ; i < region2.size() ; i++)
-    if(region2.at(i) == tile)
+  for (int i = 0; i < region2.size(); i++)
+    if (region2.at(i) == tile)
       return 2;
   return 3;
 }
 
-
 void delay(struct ev_loop *loop, ev_timer *w, int revents) {
-  cout << "Delay for request" <<endl;
+  cout << "Delay for request" << endl;
 }
 
 namespace {
 int on_stream_close_callback(nghttp2_session *session, int32_t stream_id,
                              uint32_t error_code, void *user_data) {
+  bool IS_BASE_LAYER = false;
+  int sid, fid, layerId;
   auto client = get_client(user_data);
   auto req = static_cast<Request *>(
       nghttp2_session_get_stream_user_data(session, stream_id));
- // curr_session = session;
+
+  // cout << "#######################[on_stream_close] " << stream_id <<
+  // ",error_code:" << error_code << endl;
+  // curr_session = session;
   if (!req) {
     return 0;
   }
-  // if(request_corr_id[stream_id]==1)
-  //     request1++;
-  //   else request2++;
-    //cout<<"video index "<<dang_get_face_from_uri(req->make_reqpath())<<endl;
+
   // If this request is using Expect/Continue, stop its ContinueTimer.
   if (req->continue_timer) {
     req->continue_timer->stop();
@@ -2938,166 +5326,173 @@ int on_stream_close_callback(nghttp2_session *session, int32_t stream_id,
   update_html_parser(client, req, nullptr, 0, 1);
   ++client->complete;
 
-      // Hung: record the results
-      if (req->stream_id % 2 == 0) {
-        cout<<"real len "<<req->response_len<<endl;
-      //
-        if(dang_get_face_from_uri(req->make_reqpath()) == 0)
-          is_face_0_finished = true;
-    //   request1++;
-    // else request2++;
-        // num_of_request++;
-
-        hung_sys_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                     get_time() - client->timing.connect_end_time).count();
-
-        long download_intv_us = std::chrono::duration_cast<std::chrono::microseconds>(
-                     req->timing.response_end_time - req->timing.response_start_time).count();
-        std::cout << "[INFO] measuared throughput in " << (download_intv_us / 1000) << "ms";
-        auto temp_thrp = (double)req->response_len * 8 * 1000 / download_intv_us;
-        if (download_intv_us > 500 || temp_thrp < 1500)
-          hung_inst_thrp = temp_thrp;
-        else 
-          hung_inst_thrp = 1500;
-       // if(hung_inst_thrp>5000) hung_inst_thrp=hung_thrp_recorder.at(hung_rate_recorder.size()-1);
-        std::cout << "\t New Instant thrp: " << hung_inst_thrp << std::endl;
-        if(req->response_len != 0){
-      count_tile ++;
-      //cout<<"test "<<dang_get_seg_from_uri(req->make_reqpath())<<'\t'<<played<<'\t';
-      // if(dang_get_seg_from_uri(req->make_reqpath())!=played)
-      //     dang_tile_buffer++;
-      // cout<<dang_tile_buffer<<endl;
-      // dang_tile_buffer_record.push_back(dang_tile_buffer);
-      // if(count_tile == 1){
-      //   start_measure_thrp = std::chrono::duration_cast<std::chrono::milliseconds>(
-      //             req->timing.response_start_time - client->timing.connect_end_time).count();
-       
-      // }
-      int curr_tile = dang_get_face_from_uri(req->make_reqpath());
-      // if(dang_tile_buffer > 0 && (region [curr_tile] == 1 || region [curr_tile] == 2))
-      //   data_playout += req->response_len * 8.0/1000;
-      // total_data += req->response_len * 8.0/1000;
-
-      cout << "Count Tile : " << count_tile << endl;
-      total_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-               get_time() - client->timing.connect_end_time).count() - start_measure_thrp;
-      cout << "Total data " << total_data << "\tTotal time :" << total_time << endl;
-      dang_temp_thrp = total_data * 1000.0 / total_time;
-
-      int rate = dang_get_rate_from_uri(req->make_reqpath());
-      // hung_rate_recorder.push_back(rate);
-
-      // if (hung_on_buffering)
-      //     hung_cur_buff += dang_sd;
-      // else
-      int tile = dang_get_face_from_uri(req->make_reqpath());
-      // if(check_tile_in_region(tile) == 1)
-      //   num_of_tile1 ++;
-      // else if(check_tile_in_region(tile) == 2)
-      //   num_of_tile2 ++;
-      // else num_of_tile3 ++;
-
-
-      // dang_thrp_record.push_back(dang_inst_thrp);
-      //hung_cur_buff += dang_sd - (hung_sys_time - hung_last_adapt_time[tile-1]);
-
-      //dang_cur_buff[video-1] += dang_sd - (hung_sys_time - hung_last_adapt_time[video-1]);
-
-      //hung_buff_recorder.push_back(hung_cur_buff);
-      no_of_push_in_segment++;
-      total_size_segment+=(double) req->response_len*8/1000;
-      if(curr_segment!=dang_last_segment){
-          dang_first_response=hung_sys_time-(int)download_intv_us/1000;
-          // dang_curr_buff+=dang_sd;
-          // dang_curr_buff-=hung_sys_time-dang_last_adapt_time;
-          dang_last_segment=curr_segment;
-      }
-      else 
-        // dang_curr_buff- = hung_sys_time - dang_last_time;
-      if(no_of_push_in_segment==num_of_tile){
-        long total_time = hung_sys_time-dang_first_response;
-        cout<<total_size_segment<<'\t'<<total_time<<endl;
-        //  hung_inst_thrp = total_size_segment*1000.0/total_time;
-        no_of_push_in_segment=0;
-        total_size_segment=0;
-      }
-      }        
-  }
-    else {
-     
-    // string uri = req->make_reqpath();
-    // int l = uri.find('/') + 1;
-    // int r = uri.find('/', l);
-    // string temp = uri.substr(l,r-l);
-       
-        
-    //         int index = temp.at(4) - '0';
-        // finish_request [index] = true;
-        cnt_face ++ ;
-           
-            
-        if(cnt_face == last_region){ // all faces have been received
-             // cnt_tile<<curr_segment<<'\t'<<count_tile<<endl;
-          dang_inst_thrp = total_data*1000.0/total_time;
-          dang_download_time = total_time;
-          cout << "Inst thrp " << dang_inst_thrp << ", Total data: " <<total_data << ", Total time: " << total_time << endl;
-          // data_summary<<curr_segment<<'\t'<<total_data<<'\t'<<data_playout<<endl;
-          count_tile = 0;
-          total_rate_downloaded = total_data / (dang_sd/1000.0);
-          dang_segment_rate.push_back(total_rate_request);
-          //Dang_adaptation_vr(client,1);
-          data_playout = 0; 
-          total_data = 0;
-          //total_time = 0;
-
-          // finish_segment[curr_segment] = true;
-          // cnt_face = 0;p
-          for (int i = 1; i < num_of_tile; i++)
-          frame_buffer[i] = frame_buffer[0];
-          time_finish_request = std::chrono::duration_cast<std::chrono::milliseconds>(
-               get_time() - client->timing.connect_end_time).count();
-          cout << "Curr time " << time_finish_request / 1000.0 << '\t' << curr_segment << endl;
-          finish_curr_seg = true;
-          if (no_request == NO_REQUEST) {
-            nghttp2_session_terminate_session(session, NGHTTP2_NO_ERROR);
-            terminate_session = true;
-            return 0;
-          }
-          cout << "Down time: " << time_finish_request - time_start_send_request <<endl;
-          if (time_finish_request - time_start_send_request > dang_sd ) {
-            cout << "Send request late" <<endl;
-            // restart_timer = true;
-
-            Dang_adaptation_vr (client, 0);
-            // struct ev_loop *loop = EV_DEFAULT;
-            // ev_timer_init(&tev, send_request_handle, 0, dang_sd * 1.0 / 1000);
-            // ev_timer_start (loop, &tev);
-            // next_segment ++;
-            cnt_face = 0;
-          }
-          else {
-
-            cout << "Start timer"<<endl;
-            max_timer = (dang_sd - (time_finish_request - time_start_send_request)) / 5;
-            struct ev_loop *loop = EV_DEFAULT;
-            ev_timer_init(&tev, send_request_handle, 0, 5.0 / 1000);
-            ev_timer_start (loop, &tev);
-          }
-          
-        }
-            
-          
-          //dang_rst=false;
-        //}}
+  /* start adaptation */
+  if (stream_id == INI_STREAM_ID) {
+    cur_req_stream_id = stream_id;
+    BL_seg_id = 0;
+    player.connect_end_time = client->timing.connect_end_time;
+    if (meta.ALG == 5 || meta.ALG == 6 || meta.ALG == 7 || meta.ALG == 8 ||
+        meta.ALG == 9 || meta.ALG == 10 || meta.ALG == 11 || meta.ALG == 12 ||
+        meta.ALG == 13) {
+      MMSP(client, iter_id);
+    } else {
+      UTD2017_adaptation_vr(client, iter_id);
     }
+  }
 
-  // Hung: receive stream_id
-  std::cout << "[RECV] receive stream " << req->stream_id << " Thrp: " << hung_inst_thrp <<  std::endl;
-  //print_timer();
+  // if(metric.push_stream_id_2_sid.find(stream_id) !=
+  // metric.push_stream_id_2_sid.end()){
+  if (metric.pushStreamInfo.find(stream_id) != metric.pushStreamInfo.end()) {
 
-  // if (client->all_requests_processed()) {
-  //  nghttp2_session_terminate_session(session, NGHTTP2_NO_ERROR);
-  // }
+    /* Determine segment/face/layer ids */
+    //
+    sid = metric.pushStreamInfo.find(stream_id)->second->sid;
+    fid = metric.pushStreamInfo.find(stream_id)->second->fid;
+    layerId = metric.pushStreamInfo.find(stream_id)->second->lid;
+    cout << "######[on_stream_close] push stream closed: #" << stream_id << ","
+         << sid << "," << fid << "," << layerId << endl;
+
+    /* update finished stream */
+    metric.iter_push_stream_fin[iter_id].push_back(stream_id);
+  }
+
+  /* record metrics of each stream */
+  if (metric.RequestStreamInfo.find(stream_id) !=
+      metric.RequestStreamInfo.end()) {
+
+    /* Determine segment/face/layer ids */
+    sid = metric.RequestStreamInfo.find(stream_id)->second->sid;
+    fid = metric.RequestStreamInfo.find(stream_id)->second->fid;
+    layerId = metric.RequestStreamInfo.find(stream_id)->second->lid;
+
+    /* update finished request stream */
+    metric.iter_req_stream_fin[iter_id].push_back(stream_id);
+
+    cout << "######[on_stream_close] stream_id #" << stream_id << "," << sid
+         << "," << fid << "," << layerId << endl;
+
+    /* calculate stream-realted metrics */
+    // request time
+    metric.face_req_time[sid][fid][layerId] =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            req->timing.request_start_time - client->timing.connect_end_time)
+            .count() /
+        1000.0;
+
+    // complete time
+    metric.face_end_time[sid][fid][layerId] =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            req->timing.response_end_time - client->timing.connect_end_time)
+            .count() /
+        1000.0;
+
+    // download time
+    metric.face_dow_time[sid][fid][layerId] =
+        metric.face_end_time[sid][fid][layerId] -
+        metric.face_req_time[sid][fid][layerId];
+
+    // download throughput
+    metric.face_dow_thrp[sid][fid][layerId] =
+        metric.face_dow_data[sid][fid][layerId] /
+        (metric.face_dow_time[sid][fid][layerId] / 1000.0);
+    // cout <<  metric.face_req_time[sid][fid][layerId] << "," <<
+    // metric.face_end_time[sid][fid][layerId] << "," <<
+    // metric.face_dow_time[sid][fid][layerId] << "," <<
+    // metric.face_dow_data[sid][fid][layerId] << "," <<
+    // metric.face_dow_thrp[sid][fid][layerId] << endl;
+
+    // tile size
+    metric.face_size[sid][fid][layerId] =
+        metric.face_dow_data[sid][fid][layerId];
+
+    /* check if the tile has been cancelled */
+    if (!cancelled_request_stream.empty() &&
+        std::find(cancelled_request_stream.begin(),
+                  cancelled_request_stream.end(),
+                  stream_id) != cancelled_request_stream.end()) {
+      // does not count stream in the 'remove' vtile set
+      metric.face_cancel[sid][fid][layerId] = 1;
+      cout << "#######[on_stream_close] Cancelled stream " << endl;
+    } else {
+      metric.face_cancel[sid][fid][layerId] = 0;
+    }
+    fin_s_num++;
+
+    /* Check if this tile arrives after its playback deadline */
+    if (metric.face_end_time[sid][fid][layerId] >
+        player.seg_playback_deadline[sid])
+      metric.face_late[sid][fid][layerId] = 1;
+    else
+      metric.face_late[sid][fid][layerId] = 0;
+
+    cout << "######[on_stream_close] fin_s_num: " << fin_s_num
+         << ", req_s_num: " << req_s_num << endl;
+
+    /* update tiles' versions only if the tile is neither a late tile nor
+     * canceled tile */
+    if (metric.face_late[sid][fid][layerId] == 0 &&
+        metric.face_cancel[sid][fid][layerId] == 0)
+      player.buff.update_tile_version(sid, fid, layerId);
+
+    /* write stream info to file */
+    metric.print(sid, fid, layerId);
+    metric.print_to_file(log_stream, iter_id, sid, fid, layerId);
+
+    /* update status of this iteration*/
+    metric.iter_down_data[iter_id] += metric.face_dow_data[sid][fid][layerId];
+
+    /* all segments of this round arrived, then move to the next round */
+    if (fin_s_num == req_s_num) {
+
+      /* calculate avearge thoughput of this iteration */
+      metric.iter_end_time[iter_id] =
+          std::chrono::duration_cast<std::chrono::microseconds>(
+              get_time() - client->timing.connect_end_time)
+              .count() /
+          1000.0;
+      metric.iter_down_time[iter_id] =
+          metric.iter_end_time[iter_id] - metric.iter_start_time[iter_id];
+      metric.iter_sam_thrp[iter_id] = metric.iter_down_data[iter_id] /
+                                      (metric.iter_down_time[iter_id] / 1000.0);
+      /* mark segment with ELs downloaded --> avoid repeated downloads on the
+       * same segment */
+      if (fid > 0) {
+        metric.seg_EL_download[sid] = true;
+      }
+      /* update base layer bufer (never cancel a base layer) */
+      if (fid == 0) {
+        player.incre_buff_size(meta.SD * 1000);
+        metric.base_buf_sec[BL_seg_id] = player.get_cur_buff_size_second();
+        BL_seg_id++;
+      }
+      /* write iteration info to file */
+      metric.iter_base_buff[iter_id] = player.get_cur_buff_size_second();
+      fprintf(log_iter, "%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%.2f,%.2f\n", iter_id,
+              metric.iter_start_time[iter_id], metric.iter_end_time[iter_id],
+              metric.iter_sam_thrp[iter_id], metric.iter_est_thrp[iter_id],
+              metric.iter_base_buff[iter_id], req_s_num,
+              metric.iter_down_time_budget[iter_id],
+              metric.iter_smooth_bitrate[iter_id]);
+      fflush(log_iter);
+
+      /* mark finish of this iteration */
+      metric.mark_end_iter(iter_id);
+
+      /* Terminate session if all segment have been downloaded */
+      // if(sid == (meta.NO_SEG -1) && fid > 0)
+      //   nghttp2_session_terminate_session(session, NGHTTP2_NO_ERROR);
+
+      /* go to next iteration */
+      iter_id++;
+      if (meta.ALG == 5 || meta.ALG == 6 || meta.ALG == 7 || meta.ALG == 8 ||
+          meta.ALG == 9 || meta.ALG == 10 || meta.ALG == 11 || meta.ALG == 12 ||
+          meta.ALG == 13) {
+        MMSP(client, iter_id);
+      } else {
+        UTD2017_adaptation_vr(client, iter_id);
+      }
+    }
+  }
 
   return 0;
 }
@@ -3113,7 +5508,7 @@ void print_stats(const HttpClient &client) {
   ofstream f[num_of_tile];
   ofstream buffer;
   ofstream dang_file;
-  //ofstream f2;
+  // ofstream f2;
   std::vector<Request *> reqs;
   reqs.reserve(client.reqvec.size());
   for (const auto &req : client.reqvec) {
@@ -3123,14 +5518,15 @@ void print_stats(const HttpClient &client) {
   }
   buffering_file.close();
   dang_file.open("/home/haidang/client/Output/results.txt");
-  dang_file << "finishTime\tSeg\tTile\tThrp\tTile rate\tSegment rate\tBuffer"<<endl;
+  dang_file << "finishTime\tSeg\tTile\tThrp\tTile rate\tSegment rate\tBuffer"
+            << endl;
   std::sort(std::begin(reqs), std::end(reqs),
-          [](const Request *lhs, const Request *rhs) {
-      const auto &ltiming = lhs->timing;
-      const auto &rtiming = rhs->timing;
-      return ltiming.response_end_time < rtiming.response_end_time ||
-          (ltiming.response_end_time == rtiming.response_end_time &&
-          ltiming.request_start_time < rtiming.request_start_time);
+            [](const Request *lhs, const Request *rhs) {
+              const auto &ltiming = lhs->timing;
+              const auto &rtiming = rhs->timing;
+              return ltiming.response_end_time < rtiming.response_end_time ||
+                     (ltiming.response_end_time == rtiming.response_end_time &&
+                      ltiming.request_start_time < rtiming.request_start_time);
             });
 
   std::cout << R"(
@@ -3150,61 +5546,62 @@ see http://www.w3.org/TR/resource-timing/#processing-model
 
 sorted by 'complete'
 
-id  responseEnd responseStart requestStart  process code size request path)" << std::endl;
+id  responseEnd responseStart requestStart  process code size request path)"
+            << std::endl;
 
-  // Hung: 
-int index[num_of_tile];
-int curr_seg = 0;
-double thrp_print;
-int cnt = 0, cnt_buff = 0;
-for(int i = 0; i < num_of_tile; i ++)
-  index[i] = 0;
+  // Hung:
+  int index[num_of_tile];
+  int curr_seg = 0;
+  double thrp_print;
+  int cnt = 0, cnt_buff = 0;
+  for (int i = 0; i < num_of_tile; i++)
+    index[i] = 0;
   const auto &base = client.timing.connect_end_time;
   for (const auto &req : reqs) {
-      auto response_end = std::chrono::duration_cast<std::chrono::microseconds>(
-          req->timing.response_end_time - base);
-      auto response_start = std::chrono::duration_cast<std::chrono::microseconds>(
-          req->timing.response_start_time - base);
-      auto request_start = std::chrono::duration_cast<std::chrono::microseconds>(
-          req->timing.request_start_time - base);
-      auto total = std::chrono::duration_cast<std::chrono::microseconds>(
-          req->timing.response_end_time - req->timing.request_start_time);
-      auto pushed = req->stream_id % 2 == 0;
+    auto response_end = std::chrono::duration_cast<std::chrono::microseconds>(
+        req->timing.response_end_time - base);
+    auto response_start = std::chrono::duration_cast<std::chrono::microseconds>(
+        req->timing.response_start_time - base);
+    auto request_start = std::chrono::duration_cast<std::chrono::microseconds>(
+        req->timing.request_start_time - base);
+    auto total = std::chrono::duration_cast<std::chrono::microseconds>(
+        req->timing.response_end_time - req->timing.request_start_time);
+    auto pushed = req->stream_id % 2 == 0;
 
-      std::cout << std::setw(3) << req->stream_id << " " << std::setw(11)
-                << ("+" + util::format_duration(response_end)) << " " << std::setw(13)
-                << ("+" + util::format_duration(response_start)) << " "
-                << (pushed ? "*" : " ") << std::setw(11)
-                << ("+" + util::format_duration(request_start)) << " "
-                << std::setw(8) << util::format_duration(total) << " "
-                << std::setw(4) << req->status << " " << std::setw(4)
-                << util::utos_unit(req->response_len) << " "
-                << req->make_reqpath() << std::endl;
-    if(req->stream_id%2 == 0){
+    std::cout << std::setw(3) << req->stream_id << " " << std::setw(11)
+              << ("+" + util::format_duration(response_end)) << " "
+              << std::setw(13) << ("+" + util::format_duration(response_start))
+              << " " << (pushed ? "*" : " ") << std::setw(11)
+              << ("+" + util::format_duration(request_start)) << " "
+              << std::setw(8) << util::format_duration(total) << " "
+              << std::setw(4) << req->status << " " << std::setw(4)
+              << util::utos_unit(req->response_len) << " "
+              << req->make_reqpath() << std::endl;
+    if (req->stream_id % 2 == 0) {
 
-    // if(dang_get_face_from_uri(req->make_reqpath())==num_of_tile){
+      // if(dang_get_face_from_uri(req->make_reqpath())==num_of_tile){
       // thrp_print = dang_thrp_record.at(cnt);
-      cnt ++;
+      cnt++;
       // // }
-      dang_file << response_end.count()*1.0/1000000 << '\t'
-      << dang_get_seg_from_uri(req->make_reqpath()) << '\t'
-      << dang_get_face_from_uri(req->make_reqpath()) << '\t'
+      dang_file << response_end.count() * 1.0 / 1000000 << '\t'
+                << dang_get_seg_from_uri(req->make_reqpath()) << '\t'
+                << dang_get_face_from_uri(req->make_reqpath()) << '\t'
 
-      << thrp_print << '\t'
-      << req->response_len * 8.0/(dang_sd) << '\t'
-      << dang_segment_rate.at(dang_get_seg_from_uri(req->make_reqpath()) - 1) << '\t'
-      << endl;
-      cnt_buff ++;
-        }
-               
+                << thrp_print << '\t' << req->response_len * 8.0 / (dang_sd)
+                << '\t'
+                << dang_segment_rate.at(
+                       dang_get_seg_from_uri(req->make_reqpath()) - 1)
+                << '\t' << endl;
+      cnt_buff++;
+    }
   }
-    
+
   dang_file.close();
   if (system("sudo killall complex_.sh"))
     cout << "Kill DummyNet";
-  cout<<"finish"<<endl;
+  cout << "finish" << endl;
 }
- 
+
 } // namespace
 
 namespace {
@@ -3323,19 +5720,20 @@ int communicate(
       nghttp2_priority_spec_init(&pri_spec, dep_stream_id, std::get<3>(req), 0);
 
       for (int i = 0; i < config.multiply; ++i) {
-        //client.add_request(std::get<0>(req), std::get<1>(req), std::get<2>(req),
+        // client.add_request(std::get<0>(req), std::get<1>(req),
+        // std::get<2>(req),
         //                   pri_spec);
 
-        // Hung_comment: These parameters are too complicated thus saving them is the best solution
+        // Hung_comment: These parameters are too complicated thus saving them
+        // is the best solution
         dang_data_prd = std::get<1>(req);
         dang_data_length = std::get<2>(req);
-        dang_pri_spec = pri_spec; 
+        dang_pri_spec = pri_spec;
         client.add_request(std::get<0>(req), std::get<1>(req), std::get<2>(req),
-                       pri_spec);
-  
+                           pri_spec);
+
         // hung_req_vod_rebuff(&client, false);
         // break;
-
       }
     }
     // request_corr_id[13]=1;
@@ -3395,7 +5793,7 @@ fin:
   if (ssl_ctx) {
     SSL_CTX_free(ssl_ctx);
   }
- //cout<<"finish"<<endl;
+  // cout<<"finish"<<endl;
   return result;
 }
 } // namespace
@@ -3611,16 +6009,15 @@ int run(char **uris, int n) {
     requests.emplace_back(uri, data_fd == -1 ? nullptr : &data_prd,
                           data_stat.st_size, config.weight[next_weight_idx++]);
 
-  // Hung:
-  for (int i = 0; i < hung_time_recorder.size(); i++) {
-    // std::cout << hung_seg_recorder.at(i) << "\t"
-    //           << hung_time_recorder.at(i)/1000.0 << "\t"
-    //           << hung_thrp_recorder.at(i) << "\t"
-    //           << hung_rate_recorder.at(i) << "\t"
-    //           << hung_buff_recorder.at(i)/1000.0 << "\t" 
-    //           << std::endl;
-  }
-
+    // Hung:
+    for (int i = 0; i < hung_time_recorder.size(); i++) {
+      // std::cout << hung_seg_recorder.at(i) << "\t"
+      //           << hung_time_recorder.at(i)/1000.0 << "\t"
+      //           << hung_thrp_recorder.at(i) << "\t"
+      //           << hung_rate_recorder.at(i) << "\t"
+      //           << hung_buff_recorder.at(i)/1000.0 << "\t"
+      //           << std::endl;
+    }
   }
   if (!requests.empty()) {
     if (communicate(prev_scheme, prev_host, prev_port, std::move(requests),
@@ -3628,7 +6025,7 @@ int run(char **uris, int n) {
       ++failures;
     }
   }
-  cout<<"ok"<<endl;
+  cout << "ok" << endl;
   return failures;
 }
 } // namespace
@@ -3808,8 +6205,9 @@ int main(int argc, char **argv) {
         {"encoder-header-table-size", required_argument, &flag, 14},
         {nullptr, 0, nullptr, 0}};
     int option_index = 0;
-    int c = getopt_long(argc, argv, "M:Oab:c:d:gm:np:r:hH:vst:uw:W:",
-                        long_options, &option_index);
+    int c =
+        getopt_long(argc, argv, "M:Oab:c:d:gm:np:r:hH:vst:uw:W:", long_options,
+                    &option_index);
     if (c == -1) {
       break;
     }
@@ -4058,7 +6456,7 @@ int main(int argc, char **argv) {
   act.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &act, nullptr);
   reset_timer();
-  //cout<<"ok"<<endl;
+  // cout<<"ok"<<endl;
   return run(argv + optind, argc - optind);
 }
 
@@ -4066,11 +6464,29 @@ int main(int argc, char **argv) {
 
 int main(int argc, char **argv) {
   // Hung:
-  //if (system("./start.sh &")) {std::cout << "could not run DummyNet" << std::endl; } 
- // cout<<a<<endl;
-  //init();
-// if (system("sudo bash emulate_network_condition.sh&")) {std::cout << "could not run DummyNet" << std::endl; }
+  string cmd = "bash ";
+  cmd += meta.bwtrace;
+  cmd += " &";
+  cout << "================ cmd: " << cmd << endl;
+  if (system(cmd.c_str())) {
+    std::cout << "could not run TC" << std::endl;
+  }
+
+  char filename[128];
+  //
+  sprintf(filename, "log_stream_ALG_%d.txt", meta.ALG);
+  log_stream = fopen(filename, "w");
+  fprintf(
+      log_stream,
+      "reqStreamId, "
+      "pushStreamId,face_req_time,face_end_time,face_dow_thrp,face_late,face_"
+      "cancel, iter_id,sid,fid,layerId, face_br,face_size,face_ini_weight\n");
+  //
+  sprintf(filename, "log_iter_ALG_%d.txt", meta.ALG);
+  log_iter = fopen(filename, "w");
+  fprintf(log_iter,
+          "iter_id,iter_start_time,iter_end_time,iter_sam_thrp,iter_est_thrp,"
+          "iter_base_buff,req_s_num,iter_down_time_budget\n");
 
   return nghttp2::run_app(nghttp2::main, argc, argv);
-
 }
